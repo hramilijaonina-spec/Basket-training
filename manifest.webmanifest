@@ -1,0 +1,14 @@
+{
+  "name": "Détente — Programme Basket",
+  "short_name": "Détente",
+  "description": "Programme de détente et d'explosivité — Mois 1 (Fondations).",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F1115",
+  "theme_color": "#F25C05",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
