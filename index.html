@@ -30,6 +30,7 @@
     }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  button{touch-action:manipulation; -webkit-user-select:none; user-select:none;}
   html,body{margin:0; height:100%;}
   body{
     background:var(--bg); color:var(--ink);
@@ -318,6 +319,11 @@
       <input id="set-sens" type="range" min="6" max="30" value="14">
     </div>
     <div class="card">
+      <h3>Fin de série automatique</h3>
+      <p class="tiny muted">Valide la série toute seule quand tu atteins le nombre de reps → repos → série suivante. Les exercices « par jambe / côté » gardent le bouton manuel (pour faire les deux côtés).</p>
+      <div class="seg" id="set-autoend"><button data-v="on" class="on">Activé</button><button data-v="off">Désactivé</button></div>
+    </div>
+    <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
@@ -386,7 +392,7 @@ let S = load();
 function load(){ try{ return JSON.parse(localStorage.getItem(LS)) || null; }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
 function freshState(p){
-  return { profile:p, done:{}, history:[], syncUrl:"", sens:14,
+  return { profile:p, done:{}, history:[], syncUrl:"", sens:14, autoEnd:true,
            playerId:"p_"+Math.random().toString(36).slice(2,9), jumps:[{cm:p.initialJump, at:Date.now()}] };
 }
 
@@ -416,23 +422,29 @@ function vibe(ms){ if(navigator.vibrate) try{navigator.vibrate(ms);}catch(e){} }
 let voice={active:false, stream:null, raf:null, ctx:null};
 async function voiceStart(onRep, onLevel){
   try{
-    voice.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false}});
+    voice.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
   }catch(e){ return false; }
   voice.ctx = new (window.AudioContext||window.webkitAudioContext)();
+  if(voice.ctx.state==="suspended"){ try{ await voice.ctx.resume(); }catch(e){} }
   const src=voice.ctx.createMediaStreamSource(voice.stream);
   const an=voice.ctx.createAnalyser(); an.fftSize=512; src.connect(an);
   const buf=new Uint8Array(an.fftSize);
   let armed=true, last=0;
+  let calib=true, calibStart=performance.now(), floorMax=0, floor=0.012;
   voice.active=true;
   (function loop(){
     an.getByteTimeDomainData(buf);
     let sum=0; for(let i=0;i<buf.length;i++){ const v=(buf[i]-128)/128; sum+=v*v; }
     const rms=Math.sqrt(sum/buf.length);
-    const thr=(S.sens||14)/100;
-    onLevel(Math.min(1, rms/ (thr*1.8)));
     const now=performance.now();
-    if(rms>thr && armed && now-last>320){ armed=false; last=now; onRep(); }
-    if(rms<thr*0.55){ armed=true; }
+    // learn ambient noise for the first ~900ms, then set a threshold above it
+    if(calib){ floorMax=Math.max(floorMax,rms); if(now-calibStart>900){ floor=Math.max(0.012, floorMax*1.6); calib=false; } }
+    const thr = floor*1.5 + (0.5/(S.sens||14));
+    onLevel(Math.min(1, rms/(thr*1.3)));
+    if(!calib){
+      if(rms>thr && armed && now-last>300){ armed=false; last=now; onRep(); }
+      if(rms<thr*0.6){ armed=true; }
+    }
     voice.raf=requestAnimationFrame(loop);
   })();
   return true;
@@ -544,8 +556,14 @@ function renderSetTrack(sets){
 function setCount(n){ RUN.count=n; $("#ex-count").textContent=n; }
 
 /* rep tap */
-function addRep(){ const {e}=curEx(); setCount(RUN.count+1); vibe(15);
-  if(RUN.count>=e.reps){ beep(660,0.12,0.12); } }
+function addRep(){
+  if(RESTING) return;
+  const {e}=curEx(); if(e.hold) return;
+  setCount(RUN.count+1); vibe(15);
+  if(RUN.count>=e.reps){ beep(660,0.12,0.12);
+    if(S.autoEnd!==false && !e.unit && !RUN._ending){ RUN._ending=true; setTimeout(()=>{ RUN._ending=false; completeSet(); }, 650); }
+  }
+}
 
 /* complete a set */
 function completeSet(){
@@ -582,9 +600,9 @@ function startHold(){
 }
 
 /* rest overlay with 3-2-1 */
-let restTick=null, restLeft=0, restDone=null;
+let restTick=null, restLeft=0, restDone=null, RESTING=false;
 function startRest(sec, nextTxt, onEnd){
-  restLeft=sec; restDone=onEnd;
+  restLeft=sec; restDone=onEnd; RESTING=true;
   $("#rest-next").textContent=nextTxt||"";
   const rest=$("#rest"); rest.classList.remove("go"); rest.classList.add("show");
   $("#rest-lbl").textContent="REPOS"; $("#rest-num").textContent=restLeft;
@@ -601,7 +619,7 @@ function endRest(){
   const rest=$("#rest");
   rest.classList.add("go"); $("#rest-lbl").textContent="C'EST PARTI"; $("#rest-num").textContent="GO";
   beep(1150,0.3,0.2); vibe([60,40,120]);
-  setTimeout(()=>{ rest.classList.remove("show"); if(restDone) restDone(); }, 700);
+  setTimeout(()=>{ rest.classList.remove("show"); RESTING=false; if(restDone) restDone(); }, 700);
 }
 
 function finishSession(){
@@ -665,7 +683,14 @@ $("#btn-start-session").onclick=startSession;
 // exercise controls
 $("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ if(voice.active)toggleVoice(false); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
 $("#ex-skip").onclick=()=>{ if(voice.active)toggleVoice(false); clearInterval(holdTick); endExercise(); };
-$("#ex-tap").onclick=()=>{ unlockAudio(); addRep(); };
+let _lastTap=0;
+$("#ex-tap").addEventListener("pointerdown", (ev)=>{
+  ev.preventDefault();
+  const now=performance.now();
+  if(now-_lastTap<90) return;   // anti-rebond : ignore les doubles déclenchements fantômes
+  _lastTap=now;
+  unlockAudio(); addRep();
+});
 $("#ex-setdone").onclick=completeSet;
 $("#ex-hold-start").onclick=()=>{ unlockAudio(); startHold(); };
 $("#ex-voice").onclick=()=> toggleVoice(!voice.active);
@@ -674,7 +699,7 @@ function toggleVoice(on){
   const btn=$("#ex-voice");
   if(on){
     voiceStart(()=>{ addRep(); }, (lvl)=>{ $("#ex-level").style.width=(lvl*100)+"%"; })
-      .then(ok=>{ if(ok){ btn.classList.add("on"); btn.textContent="🎤 Actif"; } else { alert("Micro indisponible ici. Utilise le bouton TAP. (Le micro marche mieux une fois l'appli installée sur ton téléphone.)"); } });
+      .then(ok=>{ if(ok){ btn.classList.add("on"); btn.textContent="🎤 Calibrage…"; setTimeout(()=>{ if(voice.active) btn.textContent="🎤 Actif"; }, 1000); } else { alert("Micro indisponible ici. Utilise le bouton TAP. (Le micro marche mieux une fois l'appli installée en https sur ton téléphone.)"); } });
   } else {
     voiceStop(); btn.classList.remove("on"); btn.textContent="🎤 Voix"; $("#ex-level").style.width="0%";
   }
@@ -699,6 +724,7 @@ $("#p-save").onclick=()=>{
 function openSettings(){
   $("#set-sync").value=S.syncUrl||"";
   $("#set-sens").value=S.sens||14;
+  $$("#set-autoend button").forEach(b=>b.classList.toggle("on", b.dataset.v===((S.autoEnd!==false)?"on":"off")));
   const p=S.profile;
   $("#set-profile").textContent = `${p.name} · ${p.height||'–'} cm · ${p.weight||'–'} kg · détente départ ${p.initialJump} cm · niveau ${p.level}`;
   show("s-settings");
@@ -712,6 +738,7 @@ function tempSettings(){ // from onboarding before profile exists
 $("#set-back").onclick=()=>{ if(S && S.profile){ renderHome(); show("s-home"); } else { show("s-onboard"); } };
 $("#set-save-sync").onclick=()=>{ if(!S) S={}; S.syncUrl=$("#set-sync").value.trim(); if(S.profile) save(); alert("URL enregistrée."); };
 $("#set-sens").oninput=()=>{ if(S){ S.sens=+$("#set-sens").value; if(S.profile) save(); } };
+$("#set-autoend").onclick=e=>{ if(e.target.dataset.v){ if(!S)S={}; S.autoEnd=(e.target.dataset.v==="on"); $$("#set-autoend button").forEach(b=>b.classList.remove("on")); e.target.classList.add("on"); if(S.profile) save(); } };
 $("#set-reset").onclick=()=>{ if(confirm("Effacer ton profil et tout ton historique ?")){ localStorage.removeItem(LS); S=null; location.reload(); } };
 
 /* ============ BOOT ============ */
