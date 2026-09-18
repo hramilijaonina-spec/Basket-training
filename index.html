@@ -557,11 +557,11 @@ function setCount(n){ RUN.count=n; $("#ex-count").textContent=n; }
 
 /* rep tap */
 function addRep(){
-  if(RESTING) return;
+  if(RESTING || (RUN && RUN._ending)) return;
   const {e}=curEx(); if(e.hold) return;
   setCount(RUN.count+1); vibe(15);
-  if(RUN.count>=e.reps){ beep(660,0.12,0.12);
-    if(S.autoEnd!==false && !e.unit && !RUN._ending){ RUN._ending=true; setTimeout(()=>{ RUN._ending=false; completeSet(); }, 650); }
+  if(RUN.count>=e.reps){ beep(660,0.12,0.14);
+    if(S.autoEnd!==false && !e.unit){ RUN._ending=true; setTimeout(()=>{ RUN._ending=false; completeSet(); }, 400); }
   }
 }
 
@@ -695,12 +695,19 @@ $("#ex-setdone").onclick=completeSet;
 $("#ex-hold-start").onclick=()=>{ unlockAudio(); startHold(); };
 $("#ex-voice").onclick=()=> toggleVoice(!voice.active);
 
+let voiceMax=0, voiceWatch=null;
 function toggleVoice(on){
   const btn=$("#ex-voice");
   if(on){
-    voiceStart(()=>{ addRep(); }, (lvl)=>{ $("#ex-level").style.width=(lvl*100)+"%"; })
-      .then(ok=>{ if(ok){ btn.classList.add("on"); btn.textContent="🎤 Calibrage…"; setTimeout(()=>{ if(voice.active) btn.textContent="🎤 Actif"; }, 1000); } else { alert("Micro indisponible ici. Utilise le bouton TAP. (Le micro marche mieux une fois l'appli installée en https sur ton téléphone.)"); } });
+    voiceMax=0;
+    voiceStart(()=>{ addRep(); }, (lvl)=>{ voiceMax=Math.max(voiceMax,lvl); $("#ex-level").style.width=(lvl*100)+"%"; })
+      .then(ok=>{ if(ok){ btn.classList.add("on"); btn.textContent="🎤 Calibrage…";
+          setTimeout(()=>{ if(voice.active) btn.textContent="🎤 Actif"; }, 1000);
+          clearTimeout(voiceWatch);
+          voiceWatch=setTimeout(()=>{ if(voice.active && voiceMax<0.05){ alert("Aucun son capté — le micro est bloqué dans l'aperçu. La voix ne peut se tester que sur l'appli hébergée (https). En attendant, utilise le bouton TAP."); } }, 4000);
+        } else { alert("Micro indisponible ici. Utilise le bouton TAP — la voix ne marche qu'une fois l'appli hébergée en https."); } });
   } else {
+    clearTimeout(voiceWatch);
     voiceStop(); btn.classList.remove("on"); btn.textContent="🎤 Voix"; $("#ex-level").style.width="0%";
   }
 }
