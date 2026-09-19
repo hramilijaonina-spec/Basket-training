@@ -1,7 +1,7 @@
 /* Détente PWA — service worker (network-first)
    Toujours la dernière version quand tu es en ligne ; le cache ne sert que hors-ligne. */
-const CACHE = "detente-m1-v3";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
+const CACHE = "detente-m1-v6";
+const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./hero.jpg", "./ex-squat.jpg"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
