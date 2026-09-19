@@ -251,6 +251,7 @@
       <div class="voicebar">
         <button class="mini" id="ex-voice">🎤 Voix</button>
         <div class="meter"><div class="lvl" id="ex-level"></div></div>
+        <span id="ex-lvltxt" class="tiny muted" style="min-width:40px;text-align:right">0%</span>
       </div>
       <button class="btn sec" id="ex-setdone" style="max-width:340px">Série terminée</button>
     </div>
@@ -326,6 +327,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
+      <p class="tiny muted" style="color:var(--accent)">App v3 · si tu ne vois pas « v3 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -422,7 +424,7 @@ function vibe(ms){ if(navigator.vibrate) try{navigator.vibrate(ms);}catch(e){} }
 let voice={active:false, stream:null, raf:null, ctx:null};
 async function voiceStart(onRep, onLevel){
   try{
-    voice.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
+    voice.stream = await navigator.mediaDevices.getUserMedia({audio:true});
   }catch(e){ return false; }
   voice.ctx = new (window.AudioContext||window.webkitAudioContext)();
   if(voice.ctx.state==="suspended"){ try{ await voice.ctx.resume(); }catch(e){} }
@@ -700,7 +702,7 @@ function toggleVoice(on){
   const btn=$("#ex-voice");
   if(on){
     voiceMax=0;
-    voiceStart(()=>{ addRep(); }, (lvl)=>{ voiceMax=Math.max(voiceMax,lvl); $("#ex-level").style.width=(lvl*100)+"%"; })
+    voiceStart(()=>{ addRep(); }, (lvl)=>{ voiceMax=Math.max(voiceMax,lvl); const pct=Math.round(lvl*100); $("#ex-level").style.width=pct+"%"; const t=$("#ex-lvltxt"); if(t) t.textContent=pct+"%"; })
       .then(ok=>{ if(ok){ btn.classList.add("on"); btn.textContent="🎤 Calibrage…";
           setTimeout(()=>{ if(voice.active) btn.textContent="🎤 Actif"; }, 1000);
           clearTimeout(voiceWatch);
