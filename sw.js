@@ -1,12 +1,16 @@
 /* Détente PWA — service worker (network-first, tolérant) */
-const CACHE = "detente-m1-1.9";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg",
-                "./hero.jpg", "./ex-squat.jpg", "./ex-souleve.jpg", "./ex-fente.jpg", "./ex-mollets.jpg"];
+const CACHE = "detente-m1-1.13";
+const ASSETS = [
+  "./", "./index.html", "./manifest.webmanifest", "./icon.svg",
+  "./hero.jpg",
+  "./ex-squat.jpg", "./ex-souleve.jpg", "./ex-fente.jpg", "./ex-mollets.jpg",
+  "./ex-deadbug.jpg", "./ex-drop.jpg", "./ex-epaules.jpg", "./ex-planche.jpg",
+  "./ex-pogos.jpg", "./ex-pompes.jpg", "./ex-rowing.jpg", "./ex-stepup.jpg"
+];
 
 self.addEventListener("install", e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
-    // cache chaque fichier séparément : un fichier manquant ne casse pas l'install
     await Promise.all(ASSETS.map(u => c.add(u).catch(() => {})));
     self.skipWaiting();
   })());

@@ -133,7 +133,7 @@
   .exprog{flex:1; display:flex; gap:4px;}
   .exprog .seg1{flex:1; height:5px; border-radius:3px; background:var(--surface-2);}
   .exprog .seg1.on{background:var(--accent);}
-  .exmedia{height:34vh; min-height:220px; margin:2px 16px 0; border-radius:20px; overflow:hidden; background:var(--surface); display:flex; align-items:center; justify-content:center;}
+  .exmedia{aspect-ratio:16/9; margin:2px 16px 0; border-radius:20px; overflow:hidden; background:var(--surface); display:flex; align-items:center; justify-content:center;}
   .exmedia img{width:100%; height:100%; object-fit:cover;}
   .exmedia .exfigwrap{width:66%; height:66%; display:flex; align-items:center; justify-content:center;}
   .expanel{flex:1; display:flex; flex-direction:column; align-items:center; padding:14px 18px 20px; text-align:center;}
@@ -195,6 +195,39 @@
   .nav a{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--ink-faint); font-size:11px; font-weight:600; cursor:pointer; text-decoration:none;}
   .nav a svg{width:23px; height:23px;}
   .nav a.on{color:var(--accent);}
+
+  /* home sticky + date strip */
+  #s-home{padding:0; height:calc(100vh - env(safe-area-inset-top)); height:calc(100dvh - env(safe-area-inset-top));}
+  .home-head{flex:0 0 auto; background:var(--bg); border-bottom:1px solid var(--line); padding:12px 18px 12px;}
+  .home-scroll{flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:10px 18px calc(var(--navh) + env(safe-area-inset-bottom) + 20px);}
+  .datestrip{display:flex; gap:8px; overflow-x:auto; margin-top:12px; scrollbar-width:none;}
+  .datestrip::-webkit-scrollbar{display:none;}
+  .dcell{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:5px; background:none; border:none; cursor:pointer; padding:0; width:46px; font-family:inherit;}
+  .dcell .dow{font-size:12px; color:var(--ink-soft); font-weight:600;}
+  .dcell .dnum{width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:var(--ink); border:2px solid transparent; background:var(--surface-2);}
+  .dcell.cur .dnum{background:var(--accent); color:var(--accent-ink);}
+  .dcell.done .dnum{border-color:var(--accent); color:var(--accent);}
+  .dcell.planned .dnum{border-color:var(--ink-faint);}
+  .dcell.dcal .dnum{font-size:19px;}
+  .hero.rest{filter:grayscale(.45) brightness(.8);}
+  .hero .play.off{background:var(--surface-3); box-shadow:none; opacity:.55; pointer-events:none;}
+
+  /* calendar page */
+  .calhead{display:flex; align-items:center; gap:12px; margin:6px 0 14px;}
+  .calmonth{flex:1; text-align:center; font-weight:700; font-size:18px; text-transform:capitalize;}
+  .calgrid-head{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;}
+  .calgrid-head span{text-align:center; font-size:11px; color:var(--ink-faint); font-weight:600;}
+  .calgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+  .cday{aspect-ratio:1; display:flex; align-items:center; justify-content:center; position:relative; border-radius:12px; font-weight:600; font-size:14px; color:var(--ink); background:var(--surface); cursor:pointer;}
+  .cday.empty{background:none; cursor:default;}
+  .cday.today{outline:2px solid var(--accent); outline-offset:-2px;}
+  .cday.done{background:var(--accent); color:var(--accent-ink);}
+  .cday.done .cs{position:absolute; bottom:3px; font-size:9px; font-weight:800; opacity:.85;}
+  .cday.active{background:color-mix(in srgb,var(--accent) 22%, transparent); outline:2px solid var(--accent); outline-offset:-2px;}
+  .cday.planned::after{content:""; position:absolute; bottom:5px; width:5px; height:5px; border-radius:50%; background:var(--ink-faint);}
+  .callegend{display:flex; flex-wrap:wrap; gap:12px 16px; margin-top:18px; font-size:12.5px; color:var(--ink-soft);}
+  .callegend span{display:flex; align-items:center; gap:6px;}
+  .cldot{width:13px; height:13px; border-radius:4px; flex:0 0 auto;}
 </style>
 </head>
 <body>
@@ -227,39 +260,41 @@
 
   <!-- HOME -->
   <section class="screen" id="s-home">
-    <div class="topbar">
-      <div><div class="tiny muted">Programme Détente</div><h2 id="home-hi" style="margin:0">Salut</h2></div>
-      <div class="spacer"></div>
-      <div class="rnd" id="btn-settings" title="Réglages">⚙</div>
-    </div>
-
-    <div class="tiny muted" style="font-weight:600; letter-spacing:.4px">TA PROGRESSION</div>
-    <div style="display:flex; align-items:baseline; gap:8px; margin-top:2px">
-      <div style="font-size:30px; font-weight:800" id="h-progtxt">0/12</div>
-      <div class="muted" style="font-weight:600">séances</div>
-      <div class="spacer"></div>
-      <div style="font-weight:800" id="h-progpct">0%</div>
-    </div>
-    <div class="pline"><div class="fill" id="h-progbar" style="width:0%"></div></div>
-
-    <div class="week" id="week-track" style="margin-top:12px"></div>
-
-    <div class="hero" id="hero-card">
-      <img src="hero.jpg" alt="" onerror="this.style.display='none'">
-      <div class="grad"></div>
-      <div class="tagpill">Aujourd'hui</div>
-      <div class="content">
-        <div class="sub" id="hero-sub">Fondations · Semaine 1</div>
-        <h2 id="hero-title">Séance A</h2>
-        <div class="meta"><span id="hero-tag">Bas du corps</span> · <span id="hero-count">7 exercices</span></div>
+    <div class="home-head">
+      <div class="topbar" style="margin-bottom:12px">
+        <div><div class="tiny muted">Programme Détente</div><h2 id="home-hi" style="margin:0">Salut</h2></div>
+        <div class="spacer"></div>
+        <div class="rnd" id="btn-settings" title="Réglages">⚙</div>
       </div>
-      <button class="play" id="hero-play" aria-label="Démarrer">
-        <svg viewBox="0 0 24 24" fill="var(--accent-ink)"><path d="M8 5v14l11-7z"/></svg>
-      </button>
+      <div class="tiny muted" style="font-weight:600; letter-spacing:.4px">TA PROGRESSION</div>
+      <div style="display:flex; align-items:baseline; gap:8px; margin-top:2px">
+        <div style="font-size:26px; font-weight:800" id="h-progtxt">0/12</div>
+        <div class="muted" style="font-weight:600">séances</div>
+        <div class="spacer"></div>
+        <div style="font-weight:800" id="h-progpct">0%</div>
+      </div>
+      <div class="pline"><div class="fill" id="h-progbar" style="width:0%"></div></div>
+      <div class="datestrip" id="date-strip"></div>
     </div>
 
-    <h3>Séances de la semaine</h3>
-    <div id="session-list"></div>
+    <div class="home-scroll">
+      <div class="hero" id="hero-card">
+        <img src="hero.jpg" alt="" onerror="this.style.display='none'">
+        <div class="grad"></div>
+        <div class="tagpill" id="hero-tagpill">Aujourd'hui</div>
+        <div class="content">
+          <div class="sub" id="hero-sub">Fondations · Semaine 1</div>
+          <h2 id="hero-title">Séance A</h2>
+          <div class="meta"><span id="hero-tag">Bas du corps</span> · <span id="hero-count">7 exercices</span></div>
+        </div>
+        <button class="play" id="hero-play" aria-label="Démarrer">
+          <svg viewBox="0 0 24 24" fill="var(--accent-ink)"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+      </div>
+
+      <h3>Ton programme</h3>
+      <div id="session-list"></div>
+    </div>
   </section>
 
   <!-- SESSION DETAIL -->
@@ -399,7 +434,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 1.11 · si tu ne vois pas « 1.11 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 1.13 · si tu ne vois pas « 1.13 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -417,6 +452,26 @@
       <button id="rest-skip">Passer ›</button>
     </div>
   </div>
+
+  <!-- CALENDAR -->
+  <section class="screen" id="s-calendar">
+    <div class="topbar">
+      <div class="rnd" id="cal-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="t">Calendrier</div>
+    </div>
+    <div class="calhead">
+      <button class="rnd" id="cal-prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="calmonth" id="cal-month">Mois</div>
+      <button class="rnd" id="cal-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>
+    <div class="calgrid-head" id="cal-dows"></div>
+    <div class="calgrid" id="cal-grid"></div>
+    <div class="callegend">
+      <span><span class="cldot" style="background:var(--accent)"></span>Séance faite (rejouable)</span>
+      <span><span class="cldot" style="background:color-mix(in srgb,var(--accent) 22%, transparent); outline:2px solid var(--accent); outline-offset:-2px"></span>À faire</span>
+      <span><span class="cldot" style="background:var(--ink-faint)"></span>Prévu</span>
+    </div>
+  </section>
 
   <!-- BOTTOM NAV -->
   <nav class="nav" id="nav">
@@ -471,7 +526,20 @@ const BLOCK = {
 const ORDER = ["A","B","C"];
 
 /* ===== PHOTOS + ILLUSTRATIONS ===== */
-const PHOTO = { "Squat au poids du corps":"ex-squat.jpg", "Soulevé roumain 1 jambe":"ex-souleve.jpg", "Fente arrière alternée":"ex-fente.jpg", "Extensions mollets debout":"ex-mollets.jpg" };
+const PHOTO = {
+  "Squat au poids du corps":"ex-squat.jpg",
+  "Soulevé roumain 1 jambe":"ex-souleve.jpg",
+  "Fente arrière alternée":"ex-fente.jpg",
+  "Extensions mollets debout":"ex-mollets.jpg",
+  "Dead bug":"ex-deadbug.jpg",
+  "Drop and stick":"ex-drop.jpg",
+  "Développé épaules":"ex-epaules.jpg",
+  "Gainage planche":"ex-planche.jpg",
+  "Pogos":"ex-pogos.jpg",
+  "Pompes":"ex-pompes.jpg",
+  "Rowing élastique":"ex-rowing.jpg",
+  "Step-up sur banc":"ex-stepup.jpg",
+};
 const ART = {
   "Squat au poids du corps":{ground:true, head:[41,27,6], segs:[[45,33,54,53],[54,53,40,63],[40,63,44,87],[45,33,27,41],[45,33,29,37]]},
   "Fente arrière alternée":{ground:true, head:[50,27,6], segs:[[50,33,50,53],[50,53,59,71],[59,71,59,87],[50,53,39,74],[39,74,31,87],[50,36,57,54]]},
@@ -514,7 +582,7 @@ let S = load();
 function load(){ try{ return JSON.parse(localStorage.getItem(LS)) || null; }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
 function freshState(p){
-  return { profile:p, done:{}, history:[], syncUrl:"", sens:14, autoEnd:true,
+  return { profile:p, done:{}, completedSeq:[], history:[], syncUrl:"", sens:14, autoEnd:true,
            playerId:"p_"+Math.random().toString(36).slice(2,9), jumps:[{cm:p.initialJump, at:Date.now()}] };
 }
 
@@ -591,39 +659,123 @@ async function syncSession(payload){
 let RUN=null; let nextTimer=null;
 function clearNext(){ if(nextTimer){ clearTimeout(nextTimer); nextTimer=null; } }
 
+/* ===== PLANNING PAR DATES ===== */
+const SEQ=[]; [1,2,3,4].forEach(w=>["A","B","C"].forEach(s=>SEQ.push({w,s})));
+const DAY=86400000;
+const DOW=["dim","lun","mar","mer","jeu","ven","sam"];
+function startOfDay(ts){ const d=new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
+function todayTs(){ return startOfDay(Date.now()); }
+function progressCount(){ return (S.completedSeq||[]).length; }
+function lastDoneTs(){ const c=S.completedSeq||[]; return c.length? c[c.length-1].at : null; }
+function nextActiveTs(){ const l=lastDoneTs(); return l==null ? todayTs() : startOfDay(l)+2*DAY; }
+function baseNextTs(){ return Math.max(nextActiveTs(), todayTs()); }
+function nextIsActive(){ return progressCount()<12 && (lastDoneTs()==null || todayTs()>=nextActiveTs()); }
+function seqDateTs(i){ const c=S.completedSeq||[]; if(i<c.length) return startOfDay(c[i].at); return baseNextTs()+(i-c.length)*2*DAY; }
+function scheduleMap(){ const map={}; const prog=progressCount(); for(let i=0;i<12;i++){ const ts=seqDateTs(i); const st = i<prog?'done':(i===prog?(nextIsActive()?'active':'planned'):'planned'); map[ts]={st,i,w:SEQ[i].w,s:SEQ[i].s}; } return map; }
+function fmtDateShort(ts){ return new Date(ts).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}); }
+
 function renderHome(){
   const p=S.profile;
   $("#home-hi").textContent = "Salut "+p.name.split(" ")[0];
-  const total=12, doneCount=Object.keys(S.done).filter(k=>S.done[k]).length;
-  $("#h-progtxt").textContent = doneCount+"/"+total;
-  const pct=Math.round(doneCount/total*100);
+  const prog=progressCount(), total=12, pct=Math.round(prog/total*100);
+  $("#h-progtxt").textContent = prog+"/"+total;
   $("#h-progpct").textContent = pct+"%";
   $("#h-progbar").style.width = pct+"%";
-  const cw=currentWeek();
-  $("#week-track").innerHTML = [1,2,3,4].map(w=>{
-    const doneN = ORDER.filter(s=>S.done["w"+w+s]).length;
-    return `<div class="wk ${w===cw?'cur':''}">S${w}<small>${doneN}/3${w===4?' · décharge':''}</small></div>`;
-  }).join("");
-  const nextS = ORDER.find(s=>!S.done["w"+cw+s]) || "A";
-  const ns=BLOCK.sessions[nextS];
-  $("#hero-sub").textContent = "Fondations · Semaine "+cw;
-  $("#hero-title").textContent = ns.title;
-  $("#hero-tag").textContent = ns.tag.charAt(0)+ns.tag.slice(1).toLowerCase();
-  $("#hero-count").textContent = ns.ex.length+" exercices";
-  $("#hero-play").onclick=()=> openSession(nextS, cw);
-  $("#session-list").innerHTML = ORDER.map(s=>{
-    const sess=BLOCK.sessions[s]; const done=!!S.done["w"+cw+s]; const isNext=s===nextS;
-    return `<div class="stile ${done?'done':''} ${isNext?'next':''}" data-s="${s}">
-      <div class="thumb badge">${done?'✓':s}</div>
-      <div class="m"><div class="nm">${sess.title}</div><div class="ds">${sess.tag} · ${sess.ex.length} exercices</div></div>
-      <div class="go">›</div></div>`;
-  }).join("");
-  $$("#session-list .stile").forEach(el=> el.onclick=()=> openSession(el.dataset.s, cw));
+  renderDateStrip();
+  renderHero();
+  renderProgramList();
 }
 
-function openSession(sKey, week){
+function renderDateStrip(){
+  const map=scheduleMap(), start=todayTs(); let html="";
+  for(let d=0; d<28; d++){
+    const ts=start+d*DAY, dd=new Date(ts), info=map[ts];
+    const cls = d===0?"cur":(info?(info.st==='done'?'done':'planned'):"");
+    html+=`<button class="dcell ${cls}" data-ts="${ts}"><span class="dow">${DOW[dd.getDay()]}</span><span class="dnum">${dd.getDate()}</span></button>`;
+  }
+  html+=`<button class="dcell dcal" id="open-cal"><span class="dow">&nbsp;</span><span class="dnum">📅</span></button>`;
+  const strip=$("#date-strip"); strip.innerHTML=html;
+  $("#open-cal").onclick=()=>{ calRef=null; renderCalendar(); show("s-calendar"); };
+  $$("#date-strip .dcell[data-ts]").forEach(el=> el.onclick=()=> onDayTap(+el.dataset.ts));
+}
+
+function renderHero(){
+  const prog=progressCount(), card=$("#hero-card"), play=$("#hero-play");
+  if(prog>=12){
+    card.classList.add("rest"); play.classList.add("off"); play.onclick=null;
+    $("#hero-tagpill").textContent="Terminé";
+    $("#hero-sub").textContent="Mois 1 · Fondations";
+    $("#hero-title").textContent="Programme terminé 🎉";
+    $("#hero-tag").textContent="Bravo"; $("#hero-count").textContent="12/12 séances";
+    return;
+  }
+  const it=SEQ[prog], ns=BLOCK.sessions[it.s];
+  $("#hero-title").textContent=ns.title;
+  $("#hero-tag").textContent=ns.tag.charAt(0)+ns.tag.slice(1).toLowerCase();
+  $("#hero-count").textContent=ns.ex.length+" exercices";
+  if(nextIsActive()){
+    card.classList.remove("rest"); play.classList.remove("off");
+    $("#hero-tagpill").textContent="Aujourd'hui";
+    $("#hero-sub").textContent="Fondations · Semaine "+it.w;
+    play.onclick=()=> startActive();
+  } else {
+    card.classList.add("rest"); play.classList.add("off"); play.onclick=null;
+    $("#hero-tagpill").textContent="Repos";
+    $("#hero-sub").textContent="Repos · prochaine séance "+fmtDateShort(nextActiveTs());
+  }
+}
+
+function renderProgramList(){
+  const prog=progressCount();
+  $("#session-list").innerHTML = SEQ.map((it,i)=>{
+    const sess=BLOCK.sessions[it.s], done=i<prog, active=(i===prog && nextIsActive());
+    let ds, badge, go;
+    if(done){ ds="Fait le "+fmtDateShort(S.completedSeq[i].at); badge="✓"; go="↻"; }
+    else if(active){ ds="À faire aujourd'hui"; badge=it.s; go="›"; }
+    else if(i===prog){ ds="Repos · le "+fmtDateShort(nextActiveTs()); badge="🔒"; go=""; }
+    else { ds="Prévu · "+fmtDateShort(seqDateTs(i)); badge="🔒"; go=""; }
+    return `<div class="stile ${done?'done':''} ${active?'next':''}" data-i="${i}"><div class="thumb badge">${badge}</div><div class="m"><div class="nm">${sess.title} · S${it.w}</div><div class="ds">${ds}</div></div><div class="go">${go}</div></div>`;
+  }).join("");
+  $$("#session-list .stile").forEach(el=>{ el.onclick=()=>{ const i=+el.dataset.i, prog2=progressCount(); if(i<prog2){ const it=SEQ[i]; openSession(it.s,it.w,{replay:true}); } else if(i===prog2 && nextIsActive()){ startActive(); } }; });
+}
+
+function startActive(){ const prog=progressCount(); if(prog>=12) return; const it=SEQ[prog]; openSession(it.s,it.w,{replay:false}); }
+
+function onDayTap(ts){
+  const info=scheduleMap()[ts];
+  if(!info) return;
+  if(info.st==='done') openSession(info.s, info.w, {replay:true});
+  else if(info.st==='active') startActive();
+  else toast(`<span class="k">${fmtDateShort(ts)}</span>${BLOCK.sessions[info.s].title} · prévu`, 2500);
+}
+
+/* ===== CALENDRIER ===== */
+let calRef=null;
+function renderCalendar(){
+  const now=new Date();
+  if(!calRef) calRef={y:now.getFullYear(), m:now.getMonth()};
+  const map=scheduleMap(), y=calRef.y, m=calRef.m, today=todayTs();
+  $("#cal-month").textContent = new Date(y,m,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  $("#cal-dows").innerHTML = ["L","M","M","J","V","S","D"].map(d=>`<span>${d}</span>`).join("");
+  const lead=(new Date(y,m,1).getDay()+6)%7, days=new Date(y,m+1,0).getDate();
+  let html="";
+  for(let i=0;i<lead;i++) html+=`<div class="cday empty"></div>`;
+  for(let dn=1; dn<=days; dn++){
+    const ts=startOfDay(new Date(y,m,dn).getTime()), info=map[ts];
+    let cls = info?(info.st==='done'?'done':(info.st==='active'?'active':'planned')):"";
+    if(ts===today) cls+=" today";
+    const s=(info&&info.st==='done')?`<span class="cs">${info.s}</span>`:"";
+    html+=`<div class="cday ${cls}" data-ts="${ts}">${dn}${s}</div>`;
+  }
+  $("#cal-grid").innerHTML=html;
+  $$("#cal-grid .cday[data-ts]").forEach(el=> el.onclick=()=> onDayTap(+el.dataset.ts));
+}
+
+
+function openSession(sKey, week, opts){
+  opts=opts||{};
   const sess=BLOCK.sessions[sKey];
-  RUN={ sKey, week, sess, exIdx:0, setIdx:0, count:0, reps:{}, startedAt:null };
+  RUN={ sKey, week, sess, exIdx:0, setIdx:0, count:0, reps:{}, startedAt:null, replay:!!opts.replay };
   $("#sess-crumb").textContent = BLOCK.name+" · S"+week;
   $("#sess-kicker").textContent = sess.tag;
   $("#sess-title").textContent = sess.title;
@@ -777,19 +929,28 @@ function finishSession(){
   stopVoiceAll();
   const dur=Date.now()-RUN.startedAt;
   const totalReps=Object.values(RUN.reps).reduce((a,b)=>a+b,0);
-  S.done["w"+RUN.week+RUN.sKey]=true;
-  S.history.unshift({ session:RUN.sKey, week:RUN.week, at:RUN.startedAt, endedAt:Date.now(), durationMs:dur, totalReps, exercises:RUN.sess.ex.length });
+  const replay=!!RUN.replay;
+  if(!replay){
+    S.completedSeq=S.completedSeq||[];
+    S.completedSeq.push({w:RUN.week, s:RUN.sKey, at:RUN.startedAt});
+    S.done["w"+RUN.week+RUN.sKey]=true;
+    S.history.unshift({ session:RUN.sKey, week:RUN.week, at:RUN.startedAt, endedAt:Date.now(), durationMs:dur, totalReps, exercises:RUN.sess.ex.length });
+  }
   save();
-  $("#sum-title").textContent = "Bravo "+S.profile.name.split(" ")[0];
+  $("#sum-title").textContent = (replay?"Séance rejouée, ":"Bravo ")+S.profile.name.split(" ")[0];
   $("#sum-dur").textContent=fmtDur(dur);
   $("#sum-ex").textContent=RUN.sess.ex.length;
   $("#sum-reps").textContent=totalReps;
-  $("#sum-note").textContent = isDeload(RUN.week) ? "Semaine de décharge — récup validée." : "Récupère bien, dors, hydrate-toi : c'est là que la détente se construit.";
+  $("#sum-note").textContent = replay ? "Rejeu — ça n'affecte pas ton programme ni ton calendrier." : (isDeload(RUN.week) ? "Semaine de décharge — récup validée." : "Récupère bien, dors, hydrate-toi : c'est là que la détente se construit.");
   $("#sum-sync").textContent="";
   show("s-summary");
-  syncSession({ type:"session", playerId:S.playerId, player:S.profile, session:RUN.sKey, week:RUN.week,
-    startedAt:new Date(RUN.startedAt).toISOString(), endedAt:new Date().toISOString(), durationSec:Math.round(dur/1000), totalReps })
-    .then(r=>{ $("#sum-sync").textContent = r==="sent" ? "✓ Envoyé au coach" : (r==="failed" ? "Envoi coach échoué — réessaie plus tard" : "Enregistré sur ton téléphone"); });
+  if(!replay){
+    syncSession({ type:"session", playerId:S.playerId, player:S.profile, session:RUN.sKey, week:RUN.week,
+      startedAt:new Date(RUN.startedAt).toISOString(), endedAt:new Date().toISOString(), durationSec:Math.round(dur/1000), totalReps })
+      .then(r=>{ $("#sum-sync").textContent = r==="sent" ? "✓ Envoyé au coach" : (r==="failed" ? "Envoi coach échoué — réessaie plus tard" : "Enregistré sur ton téléphone"); });
+  } else {
+    $("#sum-sync").textContent="Rejeu — non envoyé au coach";
+  }
 }
 
 /* ============ PROGRESS ============ */
@@ -876,9 +1037,15 @@ $("#set-reset").onclick=()=>{ if(confirm("Effacer ton profil et tout ton histori
 $("#nav-home").onclick=()=>{ renderHome(); show("s-home"); };
 $("#nav-progress").onclick=()=>{ renderProgress(); show("s-progress"); };
 $("#nav-settings").onclick=()=> openSettings();
+$("#cal-back").onclick=()=>{ renderHome(); show("s-home"); };
+$("#cal-prev").onclick=()=>{ if(!calRef) return; calRef.m--; if(calRef.m<0){calRef.m=11;calRef.y--;} renderCalendar(); };
+$("#cal-next").onclick=()=>{ if(!calRef) return; calRef.m++; if(calRef.m>11){calRef.m=0;calRef.y++;} renderCalendar(); };
 
 /* ============ BOOT ============ */
-if(S && S.profile){ renderHome(); show("s-home"); } else { show("s-onboard"); }
+if(S && S.profile){
+  if(!S.completedSeq){ S.completedSeq = (S.history||[]).slice().reverse().map(h=>({w:h.week, s:h.session, at:h.at})).slice(0,12); save(); }
+  renderHome(); show("s-home");
+} else { show("s-onboard"); }
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 </script>
 </body>
