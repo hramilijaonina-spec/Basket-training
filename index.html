@@ -141,7 +141,7 @@
   .expanel h2{font-size:24px; margin:2px 0 6px;}
   .exwhy{font-size:13.5px; color:var(--ink-soft); margin:0 0 8px; max-width:40ch;}
   .qbtn{display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line); color:var(--ink-soft); font-size:15px; font-weight:700; vertical-align:middle; margin-left:8px; cursor:pointer; line-height:1;}
-  .settrack{display:flex; justify-content:center; gap:7px; margin:2px 0 6px;}
+  .settrack{display:flex; justify-content:center; gap:7px; margin:2px 0 12px;}
   .dotset{width:10px; height:10px; border-radius:50%; background:var(--surface-3);}
   .dotset.done{background:var(--accent);}
   .dotset.cur{background:var(--accent); transform:scale(1.3);}
@@ -158,6 +158,10 @@
   .micquick label{display:block; margin:0 0 6px; font-size:12px; color:var(--ink-soft); font-weight:600;}
   .micquick input[type=range]{width:100%;}
   .micquick-hint{font-size:11px; color:var(--ink-faint); margin-top:6px; line-height:1.3;}
+  .bignum .sl{font-size:.5em; font-weight:700; color:var(--ink-soft); vertical-align:0.14em; margin:0 .04em;}
+  .toast{position:fixed; left:50%; top:20%; transform:translateX(-50%) translateY(-10px); background:var(--surface-2); border:1px solid var(--line); color:var(--ink); font-weight:700; font-size:16px; padding:14px 22px; border-radius:16px; box-shadow:0 12px 34px rgba(0,0,0,.55); z-index:150; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; max-width:82%; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast .k{display:block; font-size:12px; font-weight:600; color:var(--accent); letter-spacing:.5px; margin-bottom:3px; text-transform:uppercase;}
 
   .holdwrap{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; width:100%;}
   .holdnum{font-weight:800; font-size:clamp(64px,22vw,110px); line-height:.9;}
@@ -393,10 +397,13 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 1.9 · si tu ne vois pas « 1.9 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 1.10 · si tu ne vois pas « 1.10 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
 
   <!-- REST OVERLAY -->
   <div class="rest" id="rest">
@@ -579,7 +586,8 @@ async function syncSession(payload){
 }
 
 /* ============ RUNTIME ============ */
-let RUN=null;
+let RUN=null; let nextTimer=null;
+function clearNext(){ if(nextTimer){ clearTimeout(nextTimer); nextTimer=null; } }
 
 function renderHome(){
   const p=S.profile;
@@ -646,6 +654,7 @@ function curEx(){ const e=RUN.sess.ex[RUN.exIdx]; const sets=isDeload(RUN.week)?
 function loadExercise(){
   const {e, sets}=curEx();
   RUN.setIdx=0; RUN.count=0; RUN.side=0; RUN._ending=false;
+  const _t=$("#toast"); if(_t) _t.classList.remove("show");
   const N=RUN.sess.ex.length;
   $("#ex-progress").innerHTML = Array.from({length:N},(_,i)=>`<div class="seg1 ${i<=RUN.exIdx?'on':''}"></div>`).join("");
   $("#ex-step").textContent = `Exercice ${RUN.exIdx+1}/${N}`;
@@ -673,13 +682,18 @@ function renderSetTrack(sets){
   const c=$("#ex-settrack"); c.innerHTML="";
   for(let i=0;i<sets;i++){ const d=document.createElement("div"); d.className="dotset"+(i<RUN.setIdx?' done':(i===RUN.setIdx?' cur':'')); c.appendChild(d); }
 }
-function setCount(n){ RUN.count=n; const {e}=curEx(); $("#ex-count").textContent = n+"/"+e.reps; }
+function setCount(n){ RUN.count=n; const {e}=curEx(); $("#ex-count").innerHTML = n+'<span class="sl">/</span>'+e.reps; }
+let voiceMuteUntil=0;
+function muteVoice(ms){ voiceMuteUntil=performance.now()+(ms||800); }
+function toast(text, ms){ const t=$("#toast"); if(!t) return; t.innerHTML=text; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"), ms||3000); }
+function sideWord(unit){ return (unit && unit.indexOf("côté")>=0) ? "côté" : "jambe"; }
+function sideToast(unit){ return `<span class="k">On change</span>L'autre ${sideWord(unit)}`; }
 function sideName(unit, side){ const w = (unit && unit.indexOf("côté")>=0) ? "côté" : "jambe"; return w+" "+((side||0)===0?"gauche":"droite"); }
 function updateRepLabel(){ const {e}=curEx(); const el=$("#ex-repunit"); if(el) el.textContent = "reps"+(e.unit?(" · "+sideName(e.unit, RUN.side)):""); }
 function updateHoldLabel(){ const {e}=curEx(); const el=$("#ex-hold-target"); if(el) el.textContent = `Maintiens ${e.hold} s`+(e.unit?(" · "+sideName(e.unit, RUN.side)):""); }
 
 function addRep(){
-  if(RESTING || (RUN && RUN._ending)) return;
+  if(RESTING || (RUN && RUN._ending) || performance.now()<voiceMuteUntil) return;
   const {e}=curEx(); if(e.hold) return;
   setCount(RUN.count+1); vibe(15);
   if(RUN.count>=e.reps){ beep(660,0.12,0.14);
@@ -690,29 +704,37 @@ function addRep(){
 function validateRepSide(){
   const {e}=curEx();
   RUN.reps[RUN.exIdx]=(RUN.reps[RUN.exIdx]||0)+RUN.count;
-  if(e.unit && (RUN.side||0)===0){ RUN.side=1; setCount(0); updateRepLabel(); beep(880,0.1,0.16); vibe([30,40,30]); return; }
+  if(e.unit && (RUN.side||0)===0){ RUN.side=1; setCount(0); updateRepLabel(); muteVoice(1000); beep(880,0.1,0.16); vibe([30,40,30]); toast(sideToast(e.unit),3000); return; }
   finishSet();
 }
 function validateHoldSide(){
   const {e}=curEx();
-  if(e.unit && (RUN.side||0)===0){ RUN.side=1; updateHoldLabel(); $("#ex-hold-num").textContent=e.hold; $("#ex-hold-start").disabled=false; beep(880,0.1,0.16); vibe([30,40,30]); return; }
+  if(e.unit && (RUN.side||0)===0){ RUN.side=1; updateHoldLabel(); $("#ex-hold-num").textContent=e.hold; $("#ex-hold-start").disabled=false; beep(880,0.1,0.16); vibe([30,40,30]); toast(sideToast(e.unit),3000); return; }
   finishSet();
 }
 function finishSet(){
   const {e, sets}=curEx();
   RUN.setIdx++; RUN.side=0;
-  if(RUN.setIdx>=sets){ endExercise(); return; }
+  if(RUN.setIdx>=sets){ endExercise(true); return; }
   renderSetTrack(sets);
   const rest=e.rest||RUN.sess.rest||60;
   startRest(rest, `Série ${RUN.setIdx+1}/${sets}`, ()=>{ RUN.count=0; if(!e.hold){ setCount(0); updateRepLabel(); } else { $("#ex-hold-num").textContent=e.hold; $("#ex-hold-start").disabled=false; updateHoldLabel(); } });
 }
 
-function endExercise(){
+function endExercise(announce){
+  clearNext();
   RUN.exIdx++;
   if(RUN.exIdx>=RUN.sess.ex.length){ finishSession(); return; }
-  loadExercise();
+  if(announce){
+    const next=RUN.sess.ex[RUN.exIdx];
+    muteVoice(3200);
+    toast(`<span class="k">Exercice suivant</span>${next.n}`, 3000);
+    nextTimer=setTimeout(()=>{ nextTimer=null; loadExercise(); }, 3000);
+  } else {
+    loadExercise();
+  }
 }
-function prevExercise(){ if(RUN.exIdx>0){ clearInterval(holdTick); RUN.exIdx--; loadExercise(); } }
+function prevExercise(){ clearNext(); if(RUN.exIdx>0){ clearInterval(holdTick); RUN.exIdx--; loadExercise(); } }
 
 let holdTick=null;
 function startHold(){
@@ -746,7 +768,7 @@ function endRest(){
   clearInterval(restTick);
   const rest=$("#rest");
   rest.classList.add("go"); $("#rest-lbl").textContent="C'EST PARTI"; $("#rest-num").textContent="GO";
-  beep(1150,0.3,0.2); vibe([60,40,120]);
+  muteVoice(900); beep(1150,0.3,0.2); vibe([60,40,120]);
   setTimeout(()=>{ rest.classList.remove("show"); RESTING=false; if(restDone) restDone(); }, 700);
 }
 
@@ -799,7 +821,7 @@ $("#btn-settings").onclick=()=> openSettings();
 $("#sess-back").onclick=()=>{ renderHome(); show("s-home"); };
 $("#btn-start-session").onclick=startSession;
 
-$("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ stopVoiceAll(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
+$("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ clearNext(); stopVoiceAll(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
 $("#ex-skip").onclick=()=>{ clearInterval(holdTick); endExercise(); };
 $("#ex-prev").onclick=prevExercise;
 $("#ex-setdone").onclick=validateRepSide;
