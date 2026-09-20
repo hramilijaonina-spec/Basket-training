@@ -1,7 +1,7 @@
 /* Détente PWA — service worker (network-first, tolérant) */
-const CACHE = "detente-m1-v7";
+const CACHE = "detente-m1-1.9";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg",
-                "./hero.jpg", "./ex-squat.jpg", "./ex-souleve.jpg", "./ex-fente.jpg"];
+                "./hero.jpg", "./ex-squat.jpg", "./ex-souleve.jpg", "./ex-fente.jpg", "./ex-mollets.jpg"];
 
 self.addEventListener("install", e => {
   e.waitUntil((async () => {

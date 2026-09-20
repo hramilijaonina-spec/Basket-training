@@ -140,13 +140,14 @@
   .expanel .step{font-weight:600; color:var(--ink-faint); font-size:13px;}
   .expanel h2{font-size:24px; margin:2px 0 6px;}
   .exwhy{font-size:13.5px; color:var(--ink-soft); margin:0 0 8px; max-width:40ch;}
+  .qbtn{display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--surface-2); border:1px solid var(--line); color:var(--ink-soft); font-size:15px; font-weight:700; vertical-align:middle; margin-left:8px; cursor:pointer; line-height:1;}
   .settrack{display:flex; justify-content:center; gap:7px; margin:2px 0 6px;}
   .dotset{width:10px; height:10px; border-radius:50%; background:var(--surface-3);}
   .dotset.done{background:var(--accent);}
   .dotset.cur{background:var(--accent); transform:scale(1.3);}
 
   .counter{display:flex; flex-direction:column; align-items:center; gap:2px; width:100%; flex:1; justify-content:center;}
-  .bignum{font-weight:800; font-size:clamp(64px,22vw,104px); line-height:.9;}
+  .bignum{font-weight:800; font-size:clamp(52px,17vw,88px); line-height:.9;}
   .target-lbl{font-weight:600; font-size:16px; color:var(--ink-soft);}
   .voicehint{font-weight:700; font-size:16px; color:var(--accent); margin:6px 0 4px; line-height:1.15;}
   .voicebar{display:flex; align-items:center; gap:10px; width:100%; max-width:320px; margin-bottom:6px;}
@@ -284,14 +285,14 @@
     <div class="exmedia" id="ex-media"></div>
     <div class="expanel">
       <div class="step" id="ex-step">Exercice 1/7</div>
-      <h2 id="ex-name">Exercice</h2>
-      <p class="exwhy" id="ex-obj"></p>
+      <h2><span id="ex-name">Exercice</span> <button class="qbtn" id="ex-why" aria-label="Pourquoi cet exercice ?">?</button></h2>
+      <p class="exwhy" id="ex-obj" style="display:none"></p>
       <div class="settrack" id="ex-settrack"></div>
 
       <!-- rep counter -->
       <div class="counter" id="ex-counter">
-        <div class="target-lbl" id="ex-target">Objectif : 12 reps</div>
-        <div class="bignum" id="ex-count">0</div>
+        <div class="bignum" id="ex-count">0/12</div>
+        <div class="target-lbl" id="ex-repunit">reps</div>
         <div class="voicehint" id="ex-voicehint">🎤 Comptez à voix haute</div>
         <div class="voicebar">
           <div class="meter"><div class="lvl" id="ex-level"></div></div>
@@ -382,7 +383,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App v8 · si tu ne vois pas « v8 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 1.9 · si tu ne vois pas « 1.9 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -451,7 +452,7 @@ const BLOCK = {
 const ORDER = ["A","B","C"];
 
 /* ===== PHOTOS + ILLUSTRATIONS ===== */
-const PHOTO = { "Squat au poids du corps":"ex-squat.jpg", "Soulevé roumain 1 jambe":"ex-souleve.jpg", "Fente arrière alternée":"ex-fente.jpg" };
+const PHOTO = { "Squat au poids du corps":"ex-squat.jpg", "Soulevé roumain 1 jambe":"ex-souleve.jpg", "Fente arrière alternée":"ex-fente.jpg", "Extensions mollets debout":"ex-mollets.jpg" };
 const ART = {
   "Squat au poids du corps":{ground:true, head:[41,27,6], segs:[[45,33,54,53],[54,53,40,63],[40,63,44,87],[45,33,27,41],[45,33,29,37]]},
   "Fente arrière alternée":{ground:true, head:[50,27,6], segs:[[50,33,50,53],[50,53,59,71],[59,71,59,87],[50,53,39,74],[39,74,31,87],[50,36,57,54]]},
@@ -634,13 +635,14 @@ function curEx(){ const e=RUN.sess.ex[RUN.exIdx]; const sets=isDeload(RUN.week)?
 
 function loadExercise(){
   const {e, sets}=curEx();
-  RUN.setIdx=0; RUN.count=0; RUN._ending=false;
+  RUN.setIdx=0; RUN.count=0; RUN.side=0; RUN._ending=false;
   const N=RUN.sess.ex.length;
   $("#ex-progress").innerHTML = Array.from({length:N},(_,i)=>`<div class="seg1 ${i<=RUN.exIdx?'on':''}"></div>`).join("");
   $("#ex-step").textContent = `Exercice ${RUN.exIdx+1}/${N}`;
   $("#ex-name").textContent = e.n;
   setMedia(e.n);
   $("#ex-obj").innerHTML = "<b>Pourquoi :</b> "+e.o;
+  $("#ex-obj").style.display="none";
   $("#ex-prev").disabled = RUN.exIdx===0;
   renderSetTrack(sets);
   const isHold=!!e.hold;
@@ -648,12 +650,11 @@ function loadExercise(){
   $("#ex-hold").style.display = isHold?"flex":"none";
   $("#ex-setdone").style.display = isHold?"none":"flex";
   if(isHold){
-    $("#ex-hold-target").textContent = `Maintiens ${e.hold} s${e.unit||''}`;
+    updateHoldLabel();
     $("#ex-hold-num").textContent = e.hold;
     $("#ex-hold-start").disabled=false;
   } else {
-    $("#ex-target").textContent = `Objectif : ${e.reps}${e.unit||''} reps`;
-    setCount(0);
+    setCount(0); updateRepLabel();
     const hint=$("#ex-voicehint"); if(hint && voice.active) hint.innerHTML="🎤 Comptez à voix haute";
   }
 }
@@ -662,26 +663,38 @@ function renderSetTrack(sets){
   const c=$("#ex-settrack"); c.innerHTML="";
   for(let i=0;i<sets;i++){ const d=document.createElement("div"); d.className="dotset"+(i<RUN.setIdx?' done':(i===RUN.setIdx?' cur':'')); c.appendChild(d); }
 }
-function setCount(n){ RUN.count=n; $("#ex-count").textContent=n; }
+function setCount(n){ RUN.count=n; const {e}=curEx(); $("#ex-count").textContent = n+"/"+e.reps; }
+function sideName(unit, side){ const w = (unit && unit.indexOf("côté")>=0) ? "côté" : "jambe"; return w+" "+((side||0)===0?"gauche":"droite"); }
+function updateRepLabel(){ const {e}=curEx(); const el=$("#ex-repunit"); if(el) el.textContent = "reps"+(e.unit?(" · "+sideName(e.unit, RUN.side)):""); }
+function updateHoldLabel(){ const {e}=curEx(); const el=$("#ex-hold-target"); if(el) el.textContent = `Maintiens ${e.hold} s`+(e.unit?(" · "+sideName(e.unit, RUN.side)):""); }
 
 function addRep(){
   if(RESTING || (RUN && RUN._ending)) return;
   const {e}=curEx(); if(e.hold) return;
   setCount(RUN.count+1); vibe(15);
   if(RUN.count>=e.reps){ beep(660,0.12,0.14);
-    if(S.autoEnd!==false && !e.unit){ RUN._ending=true; setTimeout(()=>{ RUN._ending=false; completeSet(); }, 400); }
+    if(S.autoEnd!==false){ RUN._ending=true; setTimeout(()=>{ RUN._ending=false; validateRepSide(); }, 400); }
   }
 }
 
-function completeSet(){
+function validateRepSide(){
+  const {e}=curEx();
+  RUN.reps[RUN.exIdx]=(RUN.reps[RUN.exIdx]||0)+RUN.count;
+  if(e.unit && (RUN.side||0)===0){ RUN.side=1; setCount(0); updateRepLabel(); beep(880,0.1,0.16); vibe([30,40,30]); return; }
+  finishSet();
+}
+function validateHoldSide(){
+  const {e}=curEx();
+  if(e.unit && (RUN.side||0)===0){ RUN.side=1; updateHoldLabel(); $("#ex-hold-num").textContent=e.hold; $("#ex-hold-start").disabled=false; beep(880,0.1,0.16); vibe([30,40,30]); return; }
+  finishSet();
+}
+function finishSet(){
   const {e, sets}=curEx();
-  RUN.reps[RUN.exIdx]=(RUN.reps[RUN.exIdx]||0)+(e.hold?0:RUN.count);
-  RUN.setIdx++;
+  RUN.setIdx++; RUN.side=0;
   if(RUN.setIdx>=sets){ endExercise(); return; }
   renderSetTrack(sets);
   const rest=e.rest||RUN.sess.rest||60;
-  const nextTxt = e.hold ? `Série ${RUN.setIdx+1}/${sets} · maintien ${e.hold}s` : `Série ${RUN.setIdx+1}/${sets} · ${e.reps}${e.unit||''} reps`;
-  startRest(rest, nextTxt, ()=>{ RUN.count=0; if(!e.hold){ setCount(0); } else { $("#ex-hold-num").textContent=e.hold; $("#ex-hold-start").disabled=false; } });
+  startRest(rest, `Série ${RUN.setIdx+1}/${sets}`, ()=>{ RUN.count=0; if(!e.hold){ setCount(0); updateRepLabel(); } else { $("#ex-hold-num").textContent=e.hold; $("#ex-hold-start").disabled=false; updateHoldLabel(); } });
 }
 
 function endExercise(){
@@ -698,7 +711,7 @@ function startHold(){
   let left=e.hold; $("#ex-hold-num").textContent=left;
   holdTick=setInterval(()=>{
     left--;
-    if(left<=0){ clearInterval(holdTick); $("#ex-hold-num").textContent=0; beep(880,0.25,0.2); vibe(120); setTimeout(completeSet,300); return; }
+    if(left<=0){ clearInterval(holdTick); $("#ex-hold-num").textContent=0; beep(880,0.25,0.2); vibe(120); setTimeout(validateHoldSide,300); return; }
     $("#ex-hold-num").textContent=left;
     if(left<=3){ beep(700,0.1,0.14); vibe(20); }
   },1000);
@@ -779,7 +792,8 @@ $("#btn-start-session").onclick=startSession;
 $("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ stopVoiceAll(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
 $("#ex-skip").onclick=()=>{ clearInterval(holdTick); endExercise(); };
 $("#ex-prev").onclick=prevExercise;
-$("#ex-setdone").onclick=completeSet;
+$("#ex-setdone").onclick=validateRepSide;
+$("#ex-why").onclick=()=>{ const o=$("#ex-obj"); if(o) o.style.display = (o.style.display==="none"?"block":"none"); };
 $("#ex-hold-start").onclick=()=>{ unlockAudio(); startHold(); };
 
 let voiceMax=0, voiceWatch=null;
