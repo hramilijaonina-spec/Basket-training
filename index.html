@@ -382,7 +382,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App v7 · si tu ne vois pas « v7 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App v8 · si tu ne vois pas « v8 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -474,12 +474,19 @@ function figSVG(p){
 const FIGSTYLE = "<style>.exfig .lb{fill:none;stroke:var(--ink);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}.exfig .gr{stroke:var(--ink-faint);stroke-width:3;stroke-linecap:round}.exfig .hd{fill:var(--accent)}.exfig .ar{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style>";
 function artFor(name){ const s=figSVG(ART[name]); return s? FIGSTYLE+s : ""; }
 function thumbFor(name){ const s=figSVG(ART[name]); return s? FIGSTYLE+s : ""; }
-function mediaFor(name){
-  if(PHOTO[name]) return `<img src="${PHOTO[name]}" alt="${name}" onerror="this.parentNode.innerHTML='<div class=&quot;exfigwrap&quot;>'+ (window.__art&&window.__art('${name.replace(/'/g,"")}')||'') +'</div>'">`;
+function setMedia(name){
+  const media=document.getElementById("ex-media");
   const a=artFor(name);
-  return a? `<div class="exfigwrap">${a}</div>` : `<div class="exfigwrap" style="font-size:44px">🏀</div>`;
+  media.innerHTML = a ? `<div class="exfigwrap">${a}</div>` : `<div class="exfigwrap" style="font-size:46px">🏀</div>`;
+  const src=PHOTO[name];
+  if(src){
+    const img=new Image();
+    img.alt=name;
+    img.onload=()=>{ media.innerHTML=""; media.appendChild(img); };
+    img.onerror=()=>{};   // photo absente → on garde la figure SVG
+    img.src=src;
+  }
 }
-window.__art = artFor;
 
 /* ============ STATE ============ */
 const LS = "detente_m1_v1";
@@ -607,7 +614,7 @@ function openSession(sKey, week){
   $("#sess-exlist").innerHTML = sess.ex.map((e,i)=>{
     const sets = dl?deloadSets(e.sets):e.sets;
     const dose = e.hold ? `${sets}×${e.hold}s${e.unit||''}` : `${sets}×${e.reps}${e.unit||''}`;
-    const th = PHOTO[e.n] ? `<img src="${PHOTO[e.n]}" alt="">` : (thumbFor(e.n)||`${i+1}`);
+    const th = thumbFor(e.n) || `${i+1}`;
     return `<div class="exrow"><div class="rthumb">${th}</div>
       <div class="nm">${e.n}${e.sub?`<em>${e.sub}</em>`:''}</div>
       <div class="dose">${dose}</div></div>`;
@@ -632,7 +639,7 @@ function loadExercise(){
   $("#ex-progress").innerHTML = Array.from({length:N},(_,i)=>`<div class="seg1 ${i<=RUN.exIdx?'on':''}"></div>`).join("");
   $("#ex-step").textContent = `Exercice ${RUN.exIdx+1}/${N}`;
   $("#ex-name").textContent = e.n;
-  $("#ex-media").innerHTML = mediaFor(e.n);
+  setMedia(e.n);
   $("#ex-obj").innerHTML = "<b>Pourquoi :</b> "+e.o;
   $("#ex-prev").disabled = RUN.exIdx===0;
   renderSetTrack(sets);
