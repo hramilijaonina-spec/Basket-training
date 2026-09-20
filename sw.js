@@ -1,10 +1,15 @@
-/* Détente PWA — service worker (network-first)
-   Toujours la dernière version quand tu es en ligne ; le cache ne sert que hors-ligne. */
-const CACHE = "detente-m1-v6";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./hero.jpg", "./ex-squat.jpg"];
+/* Détente PWA — service worker (network-first, tolérant) */
+const CACHE = "detente-m1-v7";
+const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg",
+                "./hero.jpg", "./ex-squat.jpg", "./ex-souleve.jpg", "./ex-fente.jpg"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    // cache chaque fichier séparément : un fichier manquant ne casse pas l'install
+    await Promise.all(ASSETS.map(u => c.add(u).catch(() => {})));
+    self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", e => {
