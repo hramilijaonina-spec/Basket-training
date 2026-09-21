@@ -1,5 +1,5 @@
 /* Détente PWA — service worker (network-first, tolérant) */
-const CACHE = "detente-m1-1.13";
+const CACHE = "detente-m1-1.14";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest", "./icon.svg",
   "./hero.jpg",

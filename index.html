@@ -103,6 +103,8 @@
   .stile .m{flex:1; min-width:0;}
   .stile .m .nm{font-weight:600; font-size:16px;}
   .stile .m .ds{font-size:12.5px; color:var(--ink-soft);}
+  .stile .m .ds2{font-size:11.5px; color:var(--ink-faint); margin-top:1px;}
+  .stile.next .m .ds2{color:var(--accent); font-weight:600;}
   .stile .go{color:var(--ink-faint); font-size:22px;}
 
   /* session detail hero */
@@ -207,7 +209,7 @@
   .dcell .dnum{width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:var(--ink); border:2px solid transparent; background:var(--surface-2);}
   .dcell.cur .dnum{background:var(--accent); color:var(--accent-ink);}
   .dcell.done .dnum{border-color:var(--accent); color:var(--accent);}
-  .dcell.planned .dnum{border-color:var(--ink-faint);}
+  .dcell.planned .dnum{border-color:var(--accent);}
   .dcell.dcal .dnum{font-size:19px;}
   .hero.rest{filter:grayscale(.45) brightness(.8);}
   .hero .play.off{background:var(--surface-3); box-shadow:none; opacity:.55; pointer-events:none;}
@@ -220,14 +222,14 @@
   .calgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
   .cday{aspect-ratio:1; display:flex; align-items:center; justify-content:center; position:relative; border-radius:12px; font-weight:600; font-size:14px; color:var(--ink); background:var(--surface); cursor:pointer;}
   .cday.empty{background:none; cursor:default;}
-  .cday.today{outline:2px solid var(--accent); outline-offset:-2px;}
-  .cday.done{background:var(--accent); color:var(--accent-ink);}
+  .cday.today::after{content:""; position:absolute; bottom:4px; width:5px; height:5px; border-radius:50%; background:var(--ink);}
+  .cday.done{border-radius:50%; background:var(--accent); color:var(--accent-ink);}
   .cday.done .cs{position:absolute; bottom:3px; font-size:9px; font-weight:800; opacity:.85;}
-  .cday.active{background:color-mix(in srgb,var(--accent) 22%, transparent); outline:2px solid var(--accent); outline-offset:-2px;}
-  .cday.planned::after{content:""; position:absolute; bottom:5px; width:5px; height:5px; border-radius:50%; background:var(--ink-faint);}
+  .cday.active{border-radius:50%; background:color-mix(in srgb,var(--accent) 20%, transparent); border:2px solid var(--accent);}
+  .cday.planned{border-radius:50%; border:2px solid var(--accent);}
   .callegend{display:flex; flex-wrap:wrap; gap:12px 16px; margin-top:18px; font-size:12.5px; color:var(--ink-soft);}
   .callegend span{display:flex; align-items:center; gap:6px;}
-  .cldot{width:13px; height:13px; border-radius:4px; flex:0 0 auto;}
+  .cldot{width:13px; height:13px; border-radius:50%; flex:0 0 auto;}
 </style>
 </head>
 <body>
@@ -434,7 +436,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 1.13 · si tu ne vois pas « 1.13 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 1.14 · si tu ne vois pas « 1.14 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -468,14 +470,15 @@
     <div class="calgrid" id="cal-grid"></div>
     <div class="callegend">
       <span><span class="cldot" style="background:var(--accent)"></span>Séance faite (rejouable)</span>
-      <span><span class="cldot" style="background:color-mix(in srgb,var(--accent) 22%, transparent); outline:2px solid var(--accent); outline-offset:-2px"></span>À faire</span>
-      <span><span class="cldot" style="background:var(--ink-faint)"></span>Prévu</span>
+      <span><span class="cldot" style="background:color-mix(in srgb,var(--accent) 20%, transparent); border:2px solid var(--accent)"></span>À faire</span>
+      <span><span class="cldot" style="border:2px solid var(--accent)"></span>Prévu</span>
     </div>
   </section>
 
   <!-- BOTTOM NAV -->
   <nav class="nav" id="nav">
     <a id="nav-home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></svg>Accueil</a>
+    <a id="nav-calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Calendrier</a>
     <a id="nav-progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progrès</a>
     <a id="nav-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.9.66 1.65 1.65 0 01-3.16 0 1.65 1.65 0 00-2.9-.66l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Réglages</a>
   </nav>
@@ -489,7 +492,7 @@
 const BLOCK = {
   name:"Fondations",
   sessions:{
-    A:{ title:"Séance A", tag:"BAS DU CORPS + PLYO", rest:75,
+    A:{ title:"Séance A", tag:"BAS DU CORPS + PLYO", type:"Bas du corps + plyo", rest:75,
         obj:"Bas du corps et première pliométrie : construire la force des jambes et apprendre à réceptionner.",
         ex:[
           {n:"Squat au poids du corps", o:"Force de base quadriceps/fessiers — le moteur du saut.", sets:4, reps:12, rest:75, sub:"tempo 3 s à la descente"},
@@ -500,7 +503,7 @@ const BLOCK = {
           {n:"Pogos", o:"Réveille la raideur de cheville et le rebond élastique.", sets:3, reps:15, rest:45},
           {n:"Gainage planche", o:"Gaine le tronc pour transférer la force jambes → haut.", sets:3, hold:35, rest:45},
         ]},
-    B:{ title:"Séance B", tag:"HAUT + CORE + UNILATÉRAL", rest:60,
+    B:{ title:"Séance B", tag:"HAUT + CORE + UNILATÉRAL", type:"Haut + core + unilatéral", rest:60,
         obj:"Haut du corps, gainage et unilatéral : équilibrer le corps et solidifier le tronc.",
         ex:[
           {n:"Pompes", o:"Force du haut pour le duel et l'équilibre en l'air.", sets:4, reps:10},
@@ -511,7 +514,7 @@ const BLOCK = {
           {n:"Gainage latéral", o:"Obliques et bassin stables à la réception.", sets:3, hold:25, unit:"/côté"},
           {n:"Chaise iso (wall sit)", o:"Endurance de force des cuisses, prépare les tendons.", sets:3, hold:40},
         ]},
-    C:{ title:"Séance C", tag:"EXPLOSIVITÉ + CORE", rest:90,
+    C:{ title:"Séance C", tag:"EXPLOSIVITÉ + CORE", type:"Explosivité + core", rest:90,
         obj:"Explosivité et gainage : premières conversions force → saut, en douceur.",
         ex:[
           {n:"Squat jump bas", o:"Convertir la force en saut, réception molle.", sets:4, reps:5, rest:90},
@@ -589,7 +592,7 @@ function freshState(p){
 /* ============ HELPERS ============ */
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
-const NAV_SCREENS = {"s-home":"nav-home","s-progress":"nav-progress","s-settings":"nav-settings"};
+const NAV_SCREENS = {"s-home":"nav-home","s-calendar":"nav-calendar","s-progress":"nav-progress","s-settings":"nav-settings"};
 function show(id){
   $$(".screen").forEach(e=>e.classList.remove("active"));
   const el=$("#"+id); el.classList.add("active");
@@ -729,24 +732,30 @@ function renderProgramList(){
   const prog=progressCount();
   $("#session-list").innerHTML = SEQ.map((it,i)=>{
     const sess=BLOCK.sessions[it.s], done=i<prog, active=(i===prog && nextIsActive());
-    let ds, badge, go;
-    if(done){ ds="Fait le "+fmtDateShort(S.completedSeq[i].at); badge="✓"; go="↻"; }
-    else if(active){ ds="À faire aujourd'hui"; badge=it.s; go="›"; }
-    else if(i===prog){ ds="Repos · le "+fmtDateShort(nextActiveTs()); badge="🔒"; go=""; }
-    else { ds="Prévu · "+fmtDateShort(seqDateTs(i)); badge="🔒"; go=""; }
-    return `<div class="stile ${done?'done':''} ${active?'next':''}" data-i="${i}"><div class="thumb badge">${badge}</div><div class="m"><div class="nm">${sess.title} · S${it.w}</div><div class="ds">${ds}</div></div><div class="go">${go}</div></div>`;
+    let status, badge, go;
+    if(done){ status="Fait le "+fmtDateShort(S.completedSeq[i].at); badge="✓"; go="↻"; }
+    else if(active){ status="À faire aujourd'hui"; badge=it.s; go="›"; }
+    else if(i===prog){ status="Repos · le "+fmtDateShort(nextActiveTs()); badge="🔒"; go=""; }
+    else { status="Prévu · "+fmtDateShort(seqDateTs(i)); badge="🔒"; go=""; }
+    return `<div class="stile ${done?'done':''} ${active?'next':''}" data-i="${i}"><div class="thumb badge">${badge}</div><div class="m"><div class="nm">${sess.title} · Sem${it.w}</div><div class="ds">${sess.type} · ${sess.ex.length} exo</div><div class="ds2">${status}</div></div><div class="go">${go}</div></div>`;
   }).join("");
-  $$("#session-list .stile").forEach(el=>{ el.onclick=()=>{ const i=+el.dataset.i, prog2=progressCount(); if(i<prog2){ const it=SEQ[i]; openSession(it.s,it.w,{replay:true}); } else if(i===prog2 && nextIsActive()){ startActive(); } }; });
+  $$("#session-list .stile").forEach(el=>{ el.onclick=()=>{ const i=+el.dataset.i, prog2=progressCount(); if(i<prog2){ const it=SEQ[i]; openSession(it.s,it.w,{replay:true, canStart:true}); } else if(i===prog2 && nextIsActive()){ startActive(); } }; });
 }
 
 function startActive(){ const prog=progressCount(); if(prog>=12) return; const it=SEQ[prog]; openSession(it.s,it.w,{replay:false}); }
 
 function onDayTap(ts){
-  const info=scheduleMap()[ts];
-  if(!info) return;
-  if(info.st==='done') openSession(info.s, info.w, {replay:true});
-  else if(info.st==='active') startActive();
-  else toast(`<span class="k">${fmtDateShort(ts)}</span>${BLOCK.sessions[info.s].title} · prévu`, 2500);
+  const info=scheduleMap()[ts]; if(!info) return;
+  if(info.st==='done') openSession(info.s, info.w, {replay:true, canStart:true});
+  else if(info.st==='active') openSession(info.s, info.w, {canStart:true});
+  else { const ns=BLOCK.sessions[info.s]; toast(`<span class="k">${fmtDateShort(ts)}</span>${ns.type} · ${ns.ex.length} exo prévus`, 2600); }
+}
+
+function onCalTap(ts){
+  const info=scheduleMap()[ts]; if(!info) return;
+  if(info.st==='done') openSession(info.s, info.w, {replay:true, canStart:true, origin:"s-calendar"});
+  else if(info.st==='active') openSession(info.s, info.w, {canStart:true, origin:"s-calendar"});
+  else openSession(info.s, info.w, {canStart:false, dateTs:ts, origin:"s-calendar"});
 }
 
 /* ===== CALENDRIER ===== */
@@ -768,15 +777,15 @@ function renderCalendar(){
     html+=`<div class="cday ${cls}" data-ts="${ts}">${dn}${s}</div>`;
   }
   $("#cal-grid").innerHTML=html;
-  $$("#cal-grid .cday[data-ts]").forEach(el=> el.onclick=()=> onDayTap(+el.dataset.ts));
+  $$("#cal-grid .cday[data-ts]").forEach(el=> el.onclick=()=> onCalTap(+el.dataset.ts));
 }
 
 
 function openSession(sKey, week, opts){
   opts=opts||{};
   const sess=BLOCK.sessions[sKey];
-  RUN={ sKey, week, sess, exIdx:0, setIdx:0, count:0, reps:{}, startedAt:null, replay:!!opts.replay };
-  $("#sess-crumb").textContent = BLOCK.name+" · S"+week;
+  RUN={ sKey, week, sess, exIdx:0, setIdx:0, count:0, reps:{}, startedAt:null, replay:!!opts.replay, origin:(opts.origin||"s-home") };
+  $("#sess-crumb").textContent = BLOCK.name+" · Sem"+week;
   $("#sess-kicker").textContent = sess.tag;
   $("#sess-title").textContent = sess.title;
   $("#sess-dur").textContent = "~"+estMin(sess)+" min";
@@ -792,6 +801,9 @@ function openSession(sKey, week, opts){
       <div class="nm">${e.n}${e.sub?`<em>${e.sub}</em>`:''}</div>
       <div class="dose">${dose}</div></div>`;
   }).join("");
+  const btn=$("#btn-start-session");
+  if(opts.canStart===false){ btn.disabled=true; btn.textContent="Séance prévue"+(opts.dateTs?(" · "+fmtDateShort(opts.dateTs)):""); }
+  else { btn.disabled=false; btn.textContent = opts.replay ? "Rejouer la séance" : "Commencer la séance"; }
   show("s-session");
 }
 
@@ -980,7 +992,7 @@ $("#btn-create").onclick=()=>{
 $("#show-sync-onboard").onclick=()=> tempSettings();
 
 $("#btn-settings").onclick=()=> openSettings();
-$("#sess-back").onclick=()=>{ renderHome(); show("s-home"); };
+$("#sess-back").onclick=()=>{ if(RUN && RUN.origin==="s-calendar"){ renderCalendar(); show("s-calendar"); } else { renderHome(); show("s-home"); } };
 $("#btn-start-session").onclick=startSession;
 
 $("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ clearNext(); stopVoiceAll(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
@@ -1037,6 +1049,7 @@ $("#set-reset").onclick=()=>{ if(confirm("Effacer ton profil et tout ton histori
 $("#nav-home").onclick=()=>{ renderHome(); show("s-home"); };
 $("#nav-progress").onclick=()=>{ renderProgress(); show("s-progress"); };
 $("#nav-settings").onclick=()=> openSettings();
+$("#nav-calendar").onclick=()=>{ calRef=null; renderCalendar(); show("s-calendar"); };
 $("#cal-back").onclick=()=>{ renderHome(); show("s-home"); };
 $("#cal-prev").onclick=()=>{ if(!calRef) return; calRef.m--; if(calRef.m<0){calRef.m=11;calRef.y--;} renderCalendar(); };
 $("#cal-next").onclick=()=>{ if(!calRef) return; calRef.m++; if(calRef.m>11){calRef.m=0;calRef.y++;} renderCalendar(); };
