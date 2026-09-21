@@ -439,7 +439,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 1.16 · si tu ne vois pas « 1.16 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 1.17 · si tu ne vois pas « 1.17 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -1069,7 +1069,11 @@ if(S && S.profile){
   if(!S.completedSeq){ S.completedSeq = (S.history||[]).slice().reverse().map(h=>({w:h.week, s:h.session, at:h.at})).slice(0,12); save(); }
   renderHome(); show("s-home");
 } else { show("s-onboard"); }
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+if("serviceWorker" in navigator){
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener("controllerchange", ()=>{ if(refreshing) return; refreshing=true; location.reload(); });
+  navigator.serviceWorker.register("sw.js", {updateViaCache:"none"}).then(reg=>{ try{ reg.update(); }catch(e){} }).catch(()=>{});
+}
 </script>
 </body>
 </html>

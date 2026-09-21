@@ -1,5 +1,5 @@
-/* Détente PWA — service worker (network-first, tolérant) */
-const CACHE = "detente-m1-1.15";
+/* Détente PWA — service worker (network-first, HTML jamais mis en cache HTTP) */
+const CACHE = "detente-m1-1.17";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./hero.jpg",
   "./ex-squat.jpg", "./ex-fente.jpg", "./ex-souleve.jpg", "./ex-mollets.jpg",
@@ -12,7 +12,7 @@ const ASSETS = [
 self.addEventListener("install", e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
-    await Promise.all(ASSETS.map(u => c.add(u).catch(() => {})));  // fichier manquant ignoré
+    await Promise.all(ASSETS.map(u => c.add(u).catch(() => {})));
     self.skipWaiting();
   })());
 });
@@ -30,8 +30,11 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
+
+  const isHTML = req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html");
+  // HTML : on force le réseau SANS cache HTTP (sinon iOS ressert une vieille page)
   e.respondWith(
-    fetch(req)
+    fetch(req, isHTML ? { cache: "no-store" } : {})
       .then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)).catch(()=>{}); return res; })
       .catch(() => caches.match(req).then(hit => hit || caches.match("./index.html")))
   );
