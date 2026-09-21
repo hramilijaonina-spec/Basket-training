@@ -439,7 +439,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 1.17 · si tu ne vois pas « 1.17 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 1.18 · si tu ne vois pas « 1.18 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -794,7 +794,7 @@ function renderCalendar(){
 function openSession(sKey, week, opts){
   opts=opts||{};
   const sess=BLOCK.sessions[sKey];
-  RUN={ sKey, week, sess, exIdx:0, setIdx:0, count:0, reps:{}, startedAt:null, replay:!!opts.replay, origin:(opts.origin||"s-home") };
+  RUN={ sKey, week, sess, exIdx:0, setIdx:0, count:0, reps:{}, startedAt:null, replay:!!opts.replay, origin:(opts.origin||"s-home"), exLog:[], exStartTs:null };
   $("#sess-crumb").textContent = BLOCK.name+" · Sem"+week;
   $("#sess-kicker").textContent = sess.tag;
   $("#sess-title").textContent = sess.title;
@@ -830,6 +830,7 @@ function curEx(){ const e=RUN.sess.ex[RUN.exIdx]; const sets=isDeload(RUN.week)?
 function loadExercise(){
   const {e, sets}=curEx();
   RUN.setIdx=0; RUN.count=0; RUN.side=0; RUN._ending=false;
+  RUN.exStartTs=Date.now();
   const _t=$("#toast"); if(_t) _t.classList.remove("show");
   const N=RUN.sess.ex.length;
   $("#ex-progress").innerHTML = Array.from({length:N},(_,i)=>`<div class="seg1 ${i<=RUN.exIdx?'on':''}"></div>`).join("");
@@ -891,13 +892,29 @@ function validateHoldSide(){
 function finishSet(){
   const {e, sets}=curEx();
   RUN.setIdx++; RUN.side=0;
-  if(RUN.setIdx>=sets){ endExercise(true); return; }
+  if(RUN.setIdx>=sets){ endExercise(true, false); return; }
   renderSetTrack(sets);
   const rest=e.rest||RUN.sess.rest||60;
   startRest(rest, `Série ${RUN.setIdx+1}/${sets}`, ()=>{ RUN.count=0; if(!e.hold){ setCount(0); updateRepLabel(); } else { $("#ex-hold-num").textContent=e.hold; $("#ex-hold-start").disabled=false; updateHoldLabel(); } });
 }
 
-function endExercise(announce){
+function logExercise(skipped){
+  if(!RUN || RUN.exStartTs==null || RUN.replay) return;
+  const dl=isDeload(RUN.week), e=RUN.sess.ex[RUN.exIdx];
+  const sets = dl?deloadSets(e.sets):e.sets;
+  RUN.exLog.push({
+    i:RUN.exIdx+1, name:e.n,
+    start:new Date(RUN.exStartTs).toISOString(),
+    end:new Date().toISOString(),
+    durationSec:Math.round((Date.now()-RUN.exStartTs)/1000),
+    setsTarget:sets, reps:(RUN.reps[RUN.exIdx]||0),
+    skipped:!!skipped
+  });
+  RUN.exStartTs=null;
+}
+
+function endExercise(announce, skipped){
+  logExercise(skipped);
   clearNext();
   RUN.exIdx++;
   if(RUN.exIdx>=RUN.sess.ex.length){ finishSession(); return; }
@@ -967,8 +984,10 @@ function finishSession(){
   $("#sum-sync").textContent="";
   show("s-summary");
   if(!replay){
-    syncSession({ type:"session", playerId:S.playerId, player:S.profile, session:RUN.sKey, week:RUN.week,
-      startedAt:new Date(RUN.startedAt).toISOString(), endedAt:new Date().toISOString(), durationSec:Math.round(dur/1000), totalReps })
+    syncSession({ type:"session", playerId:S.playerId, player:{name:S.profile.name, height:S.profile.height, weight:S.profile.weight, initialJump:S.profile.initialJump, level:S.profile.level},
+      session:RUN.sKey, week:RUN.week,
+      startedAt:new Date(RUN.startedAt).toISOString(), endedAt:new Date().toISOString(), durationSec:Math.round(dur/1000), totalReps,
+      exercises:RUN.exLog })
       .then(r=>{ $("#sum-sync").textContent = r==="sent" ? "✓ Envoyé au coach" : (r==="failed" ? "Envoi coach échoué — réessaie plus tard" : "Enregistré sur ton téléphone"); });
   } else {
     $("#sum-sync").textContent="Rejeu — non envoyé au coach";
@@ -1006,7 +1025,7 @@ $("#sess-back").onclick=()=>{ if(RUN && RUN.origin==="s-calendar"){ renderCalend
 $("#btn-start-session").onclick=startSession;
 
 $("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ clearNext(); stopVoiceAll(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
-$("#ex-skip").onclick=()=>{ clearInterval(holdTick); endExercise(); };
+$("#ex-skip").onclick=()=>{ clearInterval(holdTick); endExercise(false, true); };
 $("#ex-prev").onclick=prevExercise;
 $("#ex-setdone").onclick=validateRepSide;
 $("#ex-why").onclick=()=>{ const o=$("#ex-obj"); if(o) o.style.display = (o.style.display==="none"?"block":"none"); };
