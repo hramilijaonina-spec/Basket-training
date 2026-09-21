@@ -439,7 +439,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 1.15 · si tu ne vois pas « 1.15 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 1.16 · si tu ne vois pas « 1.16 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -806,8 +806,8 @@ function openSession(sKey, week, opts){
   $("#sess-exlist").innerHTML = sess.ex.map((e,i)=>{
     const sets = dl?deloadSets(e.sets):e.sets;
     const dose = e.hold ? `${sets}×${e.hold}s${e.unit||''}` : `${sets}×${e.reps}${e.unit||''}`;
-    const th = thumbFor(e.n) || `${i+1}`;
-    return `<div class="exrow"><div class="rthumb">${th}</div>
+    const src = PHOTO[e.n] || "hero.jpg";
+    return `<div class="exrow"><div class="rthumb"><img src="${src}" alt="" onerror="this.onerror=null;this.src='hero.jpg'"></div>
       <div class="nm">${e.n}${e.sub?`<em>${e.sub}</em>`:''}</div>
       <div class="dose">${dose}</div></div>`;
   }).join("");
