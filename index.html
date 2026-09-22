@@ -439,7 +439,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 1.18 · si tu ne vois pas « 1.18 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 1.19 · si tu ne vois pas « 1.19 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -594,8 +594,9 @@ const LS = "detente_m1_v1";
 let S = load();
 function load(){ try{ return JSON.parse(localStorage.getItem(LS)) || null; }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
+const DEFAULT_SYNC_URL = "https://script.google.com/macros/s/AKfycbxcphIe5rjnHk12XyAGJ2F44OLGsHY5NyP6IPbE-UO-aC5kO1JWyoFteCFWePx87hrT/exec";
 function freshState(p){
-  return { profile:p, done:{}, completedSeq:[], history:[], syncUrl:"", sens:14, autoEnd:true,
+  return { profile:p, done:{}, completedSeq:[], history:[], syncUrl:DEFAULT_SYNC_URL, sens:14, autoEnd:true,
            playerId:"p_"+Math.random().toString(36).slice(2,9), jumps:[{cm:p.initialJump, at:Date.now()}] };
 }
 
@@ -663,8 +664,9 @@ function voiceStop(){
 
 /* ============ SYNC ============ */
 async function syncSession(payload){
-  if(!S.syncUrl) return "local";
-  try{ await fetch(S.syncUrl, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload) }); return "sent"; }
+  const url = S.syncUrl || DEFAULT_SYNC_URL;
+  if(!url) return "local";
+  try{ await fetch(url, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload) }); return "sent"; }
   catch(e){ return "failed"; }
 }
 
@@ -902,15 +904,21 @@ function logExercise(skipped){
   if(!RUN || RUN.exStartTs==null || RUN.replay) return;
   const dl=isDeload(RUN.week), e=RUN.sess.ex[RUN.exIdx];
   const sets = dl?deloadSets(e.sets):e.sets;
-  RUN.exLog.push({
+  const rec = {
     i:RUN.exIdx+1, name:e.n,
     start:new Date(RUN.exStartTs).toISOString(),
     end:new Date().toISOString(),
     durationSec:Math.round((Date.now()-RUN.exStartTs)/1000),
     setsTarget:sets, reps:(RUN.reps[RUN.exIdx]||0),
     skipped:!!skipped
-  });
+  };
+  RUN.exLog.push(rec);
   RUN.exStartTs=null;
+  // envoi immédiat au coach (fin de cet exercice)
+  syncSession({ type:"exercise", playerId:S.playerId, player:{name:S.profile.name},
+    session:RUN.sKey, week:RUN.week,
+    i:rec.i, name:rec.name, start:rec.start, end:rec.end, durationSec:rec.durationSec,
+    setsTarget:rec.setsTarget, reps:rec.reps, skipped:rec.skipped });
 }
 
 function endExercise(announce, skipped){
@@ -986,8 +994,7 @@ function finishSession(){
   if(!replay){
     syncSession({ type:"session", playerId:S.playerId, player:{name:S.profile.name, height:S.profile.height, weight:S.profile.weight, initialJump:S.profile.initialJump, level:S.profile.level},
       session:RUN.sKey, week:RUN.week,
-      startedAt:new Date(RUN.startedAt).toISOString(), endedAt:new Date().toISOString(), durationSec:Math.round(dur/1000), totalReps,
-      exercises:RUN.exLog })
+      startedAt:new Date(RUN.startedAt).toISOString(), endedAt:new Date().toISOString(), durationSec:Math.round(dur/1000), totalReps })
       .then(r=>{ $("#sum-sync").textContent = r==="sent" ? "✓ Envoyé au coach" : (r==="failed" ? "Envoi coach échoué — réessaie plus tard" : "Enregistré sur ton téléphone"); });
   } else {
     $("#sum-sync").textContent="Rejeu — non envoyé au coach";
@@ -1086,6 +1093,7 @@ $("#cal-next").onclick=()=>{ if(!calRef) return; calRef.m++; if(calRef.m>11){cal
 /* ============ BOOT ============ */
 if(S && S.profile){
   if(!S.completedSeq){ S.completedSeq = (S.history||[]).slice().reverse().map(h=>({w:h.week, s:h.session, at:h.at})).slice(0,12); save(); }
+  if(!S.syncUrl){ S.syncUrl = DEFAULT_SYNC_URL; save(); }
   renderHome(); show("s-home");
 } else { show("s-onboard"); }
 if("serviceWorker" in navigator){
