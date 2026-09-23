@@ -449,7 +449,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 2.1 · si tu ne vois pas « 2.1 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 2.2 · si tu ne vois pas « 2.2 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -676,6 +676,13 @@ async function syncSession(payload){
   if(!url) return "local";
   try{ await fetch(url, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload) }); return "sent"; }
   catch(e){ return "failed"; }
+}
+// File d'envoi : un seul envoi à la fois, dans l'ordre, pour ne jamais empiler
+// plusieurs écritures en même temps sur le Sheet (qui les traite une par une).
+let _syncChain = Promise.resolve();
+function queueSync(payload){
+  _syncChain = _syncChain.then(()=> syncSession(payload)).catch(()=> "failed");
+  return _syncChain;
 }
 
 /* ============ RUNTIME ============ */
@@ -939,8 +946,8 @@ function logExercise(skipped){
   };
   RUN.exLog.push(rec);
   RUN.exStartTs=null;
-  // envoi immédiat au coach (fin de cet exercice)
-  syncSession({ type:"exercise", playerId:S.playerId, player:{name:S.profile.name},
+  // envoi mis en file (fin de cet exercice) — un seul envoi à la fois vers le Sheet
+  queueSync({ type:"exercise", playerId:S.playerId, player:{name:S.profile.name},
     session:RUN.sKey, week:RUN.week,
     i:rec.i, name:rec.name, start:rec.start, end:rec.end, durationSec:rec.durationSec,
     setsTarget:rec.setsTarget, reps:rec.reps, skipped:rec.skipped });
@@ -1017,7 +1024,7 @@ function finishSession(){
   $("#sum-sync").textContent="";
   show("s-summary");
   if(!replay){
-    syncSession({ type:"session", playerId:S.playerId, player:{name:S.profile.name, height:S.profile.height, weight:S.profile.weight, initialJump:S.profile.initialJump, level:S.profile.level},
+    queueSync({ type:"session", playerId:S.playerId, player:{name:S.profile.name, height:S.profile.height, weight:S.profile.weight, initialJump:S.profile.initialJump, level:S.profile.level},
       session:RUN.sKey, week:RUN.week,
       startedAt:new Date(RUN.startedAt).toISOString(), endedAt:new Date().toISOString(), durationSec:Math.round(dur/1000), totalReps })
       .then(r=>{ $("#sum-sync").textContent = r==="sent" ? "✓ Envoyé au coach" : (r==="failed" ? "Envoi coach échoué — réessaie plus tard" : "Enregistré sur ton téléphone"); });
@@ -1090,7 +1097,7 @@ $("#sum-home").onclick=()=>{ renderHome(); show("s-home"); };
 $("#p-save").onclick=()=>{
   const v=+$("#p-input").value; if(!v) return;
   S.jumps.push({cm:v, at:Date.now()}); save(); $("#p-input").value=""; renderProgress();
-  syncSession({type:"retest", playerId:S.playerId, player:S.profile, jumpCm:v, at:new Date().toISOString()});
+  queueSync({type:"retest", playerId:S.playerId, player:S.profile, jumpCm:v, at:new Date().toISOString()});
 };
 
 function openSettings(){
