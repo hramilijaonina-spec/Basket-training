@@ -63,6 +63,10 @@
   .seg{display:flex; gap:8px;}
   .seg button{flex:1; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); border-radius:14px; padding:14px 8px; font-weight:600; font-size:15px; cursor:pointer;}
   .seg button.on{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+  .optrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:2px 0 12px;}
+  .optlbl{font-size:12px; font-weight:600; color:var(--ink-soft);}
+  .seg.small{flex:0 0 auto;}
+  .seg.small button{padding:8px 12px; font-size:13px; border-radius:10px;}
 
   .stat{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0;}
   .stat .s{background:var(--surface-2); border:1px solid var(--line); border-radius:999px; padding:6px 13px; font-weight:600; font-size:13.5px;}
@@ -319,6 +323,12 @@
       <h3>Échauffement (10 min)</h3>
       <p class="tiny muted" style="margin:0">Mobilité chevilles/hanches · activation fessiers &amp; mollets · 2 séries de pogos légers.</p>
     </div>
+    <div class="optrow">
+      <div class="optlbl">Matériel</div>
+      <div class="seg small" id="opt-kit"><button data-v="sans" class="on">Sans</button><button data-v="avec">Avec</button></div>
+      <div class="optlbl">Lieu</div>
+      <div class="seg small" id="opt-lieu"><button data-v="maison" class="on">Maison</button><button data-v="salle">Salle</button></div>
+    </div>
     <h3>Exercices</h3>
     <div class="card" id="sess-exlist" style="padding:6px 16px"></div>
     <button class="btn" id="btn-start-session">Commencer la séance</button>
@@ -439,7 +449,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 1.19 · si tu ne vois pas « 1.19 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 2.1 · si tu ne vois pas « 2.1 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -498,10 +508,10 @@ const BLOCK = {
     A:{ title:"Séance A", tag:"BAS DU CORPS + PLYO", type:"Bas du corps + plyo", rest:75,
         obj:"Bas du corps et première pliométrie : construire la force des jambes et apprendre à réceptionner.",
         ex:[
-          {n:"Squat au poids du corps", o:"Force de base quadriceps/fessiers — le moteur du saut.", sets:4, reps:12, rest:75, sub:"tempo 3 s à la descente"},
-          {n:"Fente arrière alternée", o:"Renforce chaque jambe et stabilise le genou.", sets:3, reps:10, rest:60, unit:"/jambe"},
-          {n:"Soulevé roumain 1 jambe", o:"Ischios et chaîne postérieure, clés du saut.", sets:3, reps:10, rest:60, unit:"/jambe"},
-          {n:"Extensions mollets debout", o:"Mollet et tendon d'Achille : le ressort du saut.", sets:4, reps:15, rest:45, sub:"tempo lent"},
+          {n:"Squat au poids du corps", v:{gym:"Back squat (barre)", home:"Goblet squat (haltère)"}, o:"Force de base quadriceps/fessiers — le moteur du saut.", sets:4, reps:12, rest:75, sub:"tempo 3 s à la descente"},
+          {n:"Fente arrière alternée", v:{gym:"Fente arrière (barre/haltères)", home:"Fente arrière (haltères)"}, o:"Renforce chaque jambe et stabilise le genou.", sets:3, reps:10, rest:60, unit:"/jambe"},
+          {n:"Soulevé roumain 1 jambe", v:{gym:"Soulevé roumain 1 jambe (haltère)", home:"Soulevé roumain 1 jambe (haltère)"}, o:"Ischios et chaîne postérieure, clés du saut.", sets:3, reps:10, rest:60, unit:"/jambe"},
+          {n:"Extensions mollets debout", v:{gym:"Mollets debout (machine/barre)", home:"Mollets debout (haltères)"}, o:"Mollet et tendon d'Achille : le ressort du saut.", sets:4, reps:15, rest:45, sub:"tempo lent"},
           {n:"Drop and stick", o:"Apprendre la réception amortie — ta 1ʳᵉ prévention blessure.", sets:5, reps:3, rest:60, sub:"saut bas, réception figée 2 s"},
           {n:"Pogos", o:"Réveille la raideur de cheville et le rebond élastique.", sets:3, reps:15, rest:45},
           {n:"Gainage planche", o:"Gaine le tronc pour transférer la force jambes → haut.", sets:3, hold:35, rest:45},
@@ -509,10 +519,10 @@ const BLOCK = {
     B:{ title:"Séance B", tag:"HAUT + CORE + UNILATÉRAL", type:"Haut + core + unilatéral", rest:60,
         obj:"Haut du corps, gainage et unilatéral : équilibrer le corps et solidifier le tronc.",
         ex:[
-          {n:"Pompes", o:"Force du haut pour le duel et l'équilibre en l'air.", sets:4, reps:10},
-          {n:"Rowing élastique", o:"Muscle le dos, équilibre les épaules, protège la posture.", sets:4, reps:10, sub:"ou tirage sous table"},
-          {n:"Développé épaules", o:"Épaules solides pour le tir et le rebond.", sets:3, reps:10, sub:"haltère/élastique ou pike push-up"},
-          {n:"Step-up sur banc", o:"Force unilatérale de montée — proche du geste de saut.", sets:3, reps:10, unit:"/jambe"},
+          {n:"Pompes", v:{gym:"Développé couché (barre légère)", home:"Pompes lestées (sac/gilet)"}, o:"Force du haut pour le duel et l'équilibre en l'air.", sets:4, reps:10},
+          {n:"Rowing élastique", v:{gym:"Rowing barre / tirage machine", home:"Rowing haltère"}, o:"Muscle le dos, équilibre les épaules, protège la posture.", sets:4, reps:10, sub:"ou tirage sous table"},
+          {n:"Développé épaules", v:{gym:"Développé militaire (barre)", home:"Développé épaules (haltères)"}, o:"Épaules solides pour le tir et le rebond.", sets:3, reps:10, sub:"haltère/élastique ou pike push-up"},
+          {n:"Step-up sur banc", v:{gym:"Step-up lesté (haltères)", home:"Step-up lesté (haltères)"}, o:"Force unilatérale de montée — proche du geste de saut.", sets:3, reps:10, unit:"/jambe"},
           {n:"Dead bug", o:"Contrôle du tronc et coordination.", sets:3, reps:8, unit:"/côté"},
           {n:"Gainage latéral", o:"Obliques et bassin stables à la réception.", sets:3, hold:25, unit:"/côté"},
           {n:"Chaise iso (wall sit)", o:"Endurance de force des cuisses, prépare les tendons.", sets:3, hold:40},
@@ -530,6 +540,11 @@ const BLOCK = {
   }
 };
 const ORDER = ["A","B","C"];
+
+/* ===== OPTIONS (matériel / lieu) → contexte d'exercice ===== */
+function ctx(){ const o=(S&&S.opts)||{}; return !o.kit ? "bw" : (o.gym ? "gym" : "home"); }
+function exName(e){ return (e.v && e.v[ctx()]) ? e.v[ctx()] : e.n; }
+function exImg(e){ return PHOTO[e.n] || "hero.jpg"; }
 
 /* ===== PHOTOS + ILLUSTRATIONS ===== */
 const PHOTO = {
@@ -576,17 +591,10 @@ function figSVG(p){
 const FIGSTYLE = "<style>.exfig .lb{fill:none;stroke:var(--ink);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}.exfig .gr{stroke:var(--ink-faint);stroke-width:3;stroke-linecap:round}.exfig .hd{fill:var(--accent)}.exfig .ar{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style>";
 function artFor(name){ const s=figSVG(ART[name]); return s? FIGSTYLE+s : ""; }
 function thumbFor(name){ const s=figSVG(ART[name]); return s? FIGSTYLE+s : ""; }
-function setMedia(name){
+function setMedia(src){
   const media=document.getElementById("ex-media");
-  media.innerHTML = `<div class="exph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>Image à venir</span></div>`;
-  const src=PHOTO[name];
-  if(src){
-    const img=new Image();
-    img.alt=name;
-    img.onload=()=>{ media.innerHTML=""; media.appendChild(img); };
-    img.onerror=()=>{};   // photo absente → on garde le placeholder
-    img.src=src;
-  }
+  media.innerHTML = `<img alt="" onerror="this.onerror=null;this.src='hero.jpg'">`;
+  media.firstChild.src = src || "hero.jpg";
 }
 
 /* ============ STATE ============ */
@@ -596,7 +604,7 @@ function load(){ try{ return JSON.parse(localStorage.getItem(LS)) || null; }catc
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
 const DEFAULT_SYNC_URL = "https://script.google.com/macros/s/AKfycbxcphIe5rjnHk12XyAGJ2F44OLGsHY5NyP6IPbE-UO-aC5kO1JWyoFteCFWePx87hrT/exec";
 function freshState(p){
-  return { profile:p, done:{}, completedSeq:[], history:[], syncUrl:DEFAULT_SYNC_URL, sens:14, autoEnd:true,
+  return { profile:p, done:{}, completedSeq:[], history:[], syncUrl:DEFAULT_SYNC_URL, sens:14, autoEnd:true, opts:{kit:false, gym:false},
            playerId:"p_"+Math.random().toString(36).slice(2,9), jumps:[{cm:p.initialJump, at:Date.now()}] };
 }
 
@@ -684,8 +692,8 @@ function progressCount(){ return (S.completedSeq||[]).length; }
 function lastDoneTs(){ const c=S.completedSeq||[]; return c.length? c[c.length-1].at : null; }
 function nextActiveTs(){ const l=lastDoneTs(); return l==null ? todayTs() : startOfDay(l)+2*DAY; }
 function baseNextTs(){ return Math.max(nextActiveTs(), todayTs()); }
-function nextIsActive(){ return progressCount()<12 && (lastDoneTs()==null || todayTs()>=nextActiveTs()); }
-function seqDateTs(i){ const c=S.completedSeq||[]; if(i<c.length) return startOfDay(c[i].at); return baseNextTs()+(i-c.length)*2*DAY; }
+function nextIsActive(){ return progressCount()<12; }
+function seqDateTs(i){ const c=S.completedSeq||[]; if(i<c.length) return startOfDay(c[i].at); return todayTs()+(i-c.length)*2*DAY; }
 function scheduleMap(){ const map={}; const prog=progressCount(); for(let i=0;i<12;i++){ const ts=seqDateTs(i); const st = i<prog?'done':(i===prog?(nextIsActive()?'active':'planned'):'planned'); map[ts]={st,i,w:SEQ[i].w,s:SEQ[i].s}; } return map; }
 function fmtDateShort(ts){ return new Date(ts).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}); }
 
@@ -740,18 +748,23 @@ function renderHero(){
   }
 }
 
+let homeExpanded=false;
 function renderProgramList(){
-  const prog=progressCount();
-  $("#session-list").innerHTML = SEQ.map((it,i)=>{
-    const sess=BLOCK.sessions[it.s], done=i<prog, active=(i===prog && nextIsActive());
+  const prog=progressCount(), total=SEQ.length;
+  let idxs;
+  if(homeExpanded){ idxs = SEQ.map((_,i)=>i); }
+  else { const start=Math.min(prog, Math.max(0,total-4)); idxs=[]; for(let i=start;i<Math.min(start+4,total);i++) idxs.push(i); }
+  const rows = idxs.map(i=>{
+    const it=SEQ[i], sess=BLOCK.sessions[it.s], done=i<prog, active=(i===prog);
     let status, badge, go;
     if(done){ status="Fait le "+fmtDateShort(S.completedSeq[i].at); badge="✓"; go="↻"; }
-    else if(active){ status="À faire aujourd'hui"; badge=it.s; go="›"; }
-    else if(i===prog){ status="Repos · le "+fmtDateShort(nextActiveTs()); badge="🔒"; go=""; }
-    else { status="Prévu · "+fmtDateShort(seqDateTs(i)); badge="🔒"; go=""; }
+    else if(active){ status="À faire — quand tu veux"; badge=it.s; go="›"; }
+    else { status="À suivre · ~"+fmtDateShort(seqDateTs(i)); badge=it.s; go="›"; }
     return `<div class="stile ${done?'done':''} ${active?'next':''}" data-i="${i}"><div class="thumb badge">${badge}</div><div class="m"><div class="nm">${sess.title} · Sem${it.w}</div><div class="ds">${sess.type} · ${sess.ex.length} exo</div><div class="ds2">${status}</div></div><div class="go">${go}</div></div>`;
   }).join("");
-  $$("#session-list .stile").forEach(el=>{ el.onclick=()=>{ const i=+el.dataset.i, prog2=progressCount(); if(i<prog2){ const it=SEQ[i]; openSession(it.s,it.w,{replay:true, canStart:true}); } else if(i===prog2 && nextIsActive()){ startActive(); } }; });
+  $("#session-list").innerHTML = rows + `<button class="btn ghost" id="voir-plus" style="margin-top:2px">${homeExpanded?"Voir moins":"Voir tout le programme ("+total+")"}</button>`;
+  $$("#session-list .stile").forEach(el=>{ el.onclick=()=>{ const i=+el.dataset.i, prog2=progressCount(); const it=SEQ[i]; if(i<prog2){ openSession(it.s,it.w,{replay:true, canStart:true}); } else if(i===prog2){ startActive(); } else { openSession(it.s,it.w,{canStart:false, dateTs:seqDateTs(i)}); } }; });
+  $("#voir-plus").onclick=()=>{ homeExpanded=!homeExpanded; renderProgramList(); };
 }
 
 function startActive(){ const prog=progressCount(); if(prog>=12) return; const it=SEQ[prog]; openSession(it.s,it.w,{replay:false}); }
@@ -805,18 +818,30 @@ function openSession(sKey, week, opts){
   $("#sess-obj").innerHTML = "<b>Objectif :</b> "+sess.obj;
   const dl=isDeload(week);
   $("#sess-deload").style.display = dl?"block":"none";
-  $("#sess-exlist").innerHTML = sess.ex.map((e,i)=>{
-    const sets = dl?deloadSets(e.sets):e.sets;
-    const dose = e.hold ? `${sets}×${e.hold}s${e.unit||''}` : `${sets}×${e.reps}${e.unit||''}`;
-    const src = PHOTO[e.n] || "hero.jpg";
-    return `<div class="exrow"><div class="rthumb"><img src="${src}" alt="" onerror="this.onerror=null;this.src='hero.jpg'"></div>
-      <div class="nm">${e.n}${e.sub?`<em>${e.sub}</em>`:''}</div>
-      <div class="dose">${dose}</div></div>`;
-  }).join("");
+  renderSessExlist();
   const btn=$("#btn-start-session");
   if(opts.canStart===false){ btn.disabled=true; btn.textContent="Séance prévue"+(opts.dateTs?(" · "+fmtDateShort(opts.dateTs)):""); }
   else { btn.disabled=false; btn.textContent = opts.replay ? "Rejouer la séance" : "Commencer la séance"; }
+  syncOptButtons();
   show("s-session");
+}
+
+function renderSessExlist(){
+  if(!RUN) return;
+  const dl=isDeload(RUN.week), sess=RUN.sess;
+  $("#sess-exlist").innerHTML = sess.ex.map((e)=>{
+    const sets = dl?deloadSets(e.sets):e.sets;
+    const dose = e.hold ? `${sets}×${e.hold}s${e.unit||''}` : `${sets}×${e.reps}${e.unit||''}`;
+    return `<div class="exrow"><div class="rthumb"><img src="${exImg(e)}" alt="" onerror="this.onerror=null;this.src='hero.jpg'"></div>
+      <div class="nm">${exName(e)}${e.sub?`<em>${e.sub}</em>`:''}</div>
+      <div class="dose">${dose}</div></div>`;
+  }).join("");
+}
+function syncOptButtons(){
+  const o=(S&&S.opts)||{kit:false,gym:false};
+  $$("#opt-kit button").forEach(b=> b.classList.toggle("on", (b.dataset.v==="avec")===!!o.kit));
+  $$("#opt-lieu button").forEach(b=> b.classList.toggle("on", (b.dataset.v==="salle")===!!o.gym));
+  const lieu=$("#opt-lieu"); if(lieu) lieu.style.opacity = o.kit ? "1" : ".45";
 }
 
 function startSession(){
@@ -837,8 +862,8 @@ function loadExercise(){
   const N=RUN.sess.ex.length;
   $("#ex-progress").innerHTML = Array.from({length:N},(_,i)=>`<div class="seg1 ${i<=RUN.exIdx?'on':''}"></div>`).join("");
   $("#ex-step").textContent = `Exercice ${RUN.exIdx+1}/${N}`;
-  $("#ex-name").textContent = e.n;
-  setMedia(e.n);
+  $("#ex-name").textContent = exName(e);
+  setMedia(exImg(e));
   $("#ex-obj").innerHTML = "<b>Pourquoi :</b> "+e.o;
   $("#ex-obj").style.display="none";
   $("#ex-prev").disabled = RUN.exIdx===0;
@@ -905,7 +930,7 @@ function logExercise(skipped){
   const dl=isDeload(RUN.week), e=RUN.sess.ex[RUN.exIdx];
   const sets = dl?deloadSets(e.sets):e.sets;
   const rec = {
-    i:RUN.exIdx+1, name:e.n,
+    i:RUN.exIdx+1, name:exName(e),
     start:new Date(RUN.exStartTs).toISOString(),
     end:new Date().toISOString(),
     durationSec:Math.round((Date.now()-RUN.exStartTs)/1000),
@@ -1030,6 +1055,8 @@ $("#show-sync-onboard").onclick=()=> tempSettings();
 $("#btn-settings").onclick=()=> openSettings();
 $("#sess-back").onclick=()=>{ if(RUN && RUN.origin==="s-calendar"){ renderCalendar(); show("s-calendar"); } else { renderHome(); show("s-home"); } };
 $("#btn-start-session").onclick=startSession;
+$("#opt-kit").onclick=(e)=>{ if(!e.target.dataset.v) return; if(!S.opts)S.opts={kit:false,gym:false}; S.opts.kit=(e.target.dataset.v==="avec"); if(S.profile)save(); syncOptButtons(); renderSessExlist(); };
+$("#opt-lieu").onclick=(e)=>{ if(!e.target.dataset.v) return; if(!S.opts)S.opts={kit:false,gym:false}; if(!S.opts.kit) return; S.opts.gym=(e.target.dataset.v==="salle"); if(S.profile)save(); syncOptButtons(); renderSessExlist(); };
 
 $("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ clearNext(); stopVoiceAll(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
 $("#ex-skip").onclick=()=>{ clearInterval(holdTick); endExercise(false, true); };
@@ -1093,6 +1120,7 @@ $("#cal-next").onclick=()=>{ if(!calRef) return; calRef.m++; if(calRef.m>11){cal
 /* ============ BOOT ============ */
 if(S && S.profile){
   if(!S.completedSeq){ S.completedSeq = (S.history||[]).slice().reverse().map(h=>({w:h.week, s:h.session, at:h.at})).slice(0,12); save(); }
+  if(!S.opts){ S.opts={kit:false, gym:false}; save(); }
   if(!S.syncUrl){ S.syncUrl = DEFAULT_SYNC_URL; save(); }
   renderHome(); show("s-home");
 } else { show("s-onboard"); }
