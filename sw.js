@@ -1,5 +1,5 @@
 /* Détente PWA — service worker (network-first, HTML jamais mis en cache HTTP) */
-const CACHE = "detente-m1-2.4";
+const CACHE = "detente-m1-2.5";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./hero.jpg",
   "./ex-squat.jpg", "./ex-fente.jpg", "./ex-souleve.jpg", "./ex-mollets.jpg",

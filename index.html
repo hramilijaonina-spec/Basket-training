@@ -432,6 +432,8 @@
       <h3>Sync coach</h3>
       <p class="tiny muted">Tes séances et exercices sont envoyés automatiquement au coach dès qu'ils sont terminés — pas de configuration à faire. Si le réseau coupe, ils restent en attente sur ton téléphone et repartent tout seuls dès que la connexion revient.</p>
       <p class="tiny" id="set-syncstatus" style="color:var(--accent); font-weight:600; margin-top:8px"></p>
+      <button class="btn sec" id="set-checksync" style="margin-top:10px">Vérifier la synchro</button>
+      <p class="tiny muted" id="set-checkresult" style="margin-top:6px"></p>
     </div>
     <div class="card">
       <h3>Micro (compteur voix)</h3>
@@ -447,7 +449,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 2.4 · si tu ne vois pas « 2.4 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 2.5 · si tu ne vois pas « 2.5 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -1154,6 +1156,17 @@ function openSettings(){
   show("s-settings");
 }
 $("#set-back").onclick=()=>{ if(S&&S.profile){ renderHome(); show("s-home"); } else show("s-onboard"); };
+$("#set-checksync").onclick=async ()=>{
+  const el=$("#set-checkresult"); el.textContent="Vérification en direct…";
+  try{
+    const r = await fetch(fbPath("exercises")+"?_="+Date.now(), {cache:"no-store"});
+    if(!r.ok){ el.textContent = "Erreur HTTP "+r.status+" — les règles Firebase bloquent probablement l'accès."; return; }
+    const data = await r.json();
+    const n = data ? Object.keys(data).length : 0;
+    const pend = loadOutbox().length;
+    el.textContent = (n>0 ? `✓ ${n} exercice(s) reçus par le coach.` : "Base vide pour l'instant — aucun exercice reçu.") + (pend ? ` (${pend} encore en attente sur ce téléphone)` : "");
+  }catch(e){ el.textContent = "Échec de la connexion à Firebase : "+e.message; }
+};
 $("#set-sens").oninput=()=>{ if(S){ S.sens=+$("#set-sens").value; if(S.profile) save(); } };
 $("#set-autoend").onclick=e=>{ if(e.target.dataset.v){ if(!S)S={}; S.autoEnd=(e.target.dataset.v==="on"); $$("#set-autoend button").forEach(b=>b.classList.remove("on")); e.target.classList.add("on"); if(S.profile) save(); } };
 $("#set-reset").onclick=()=>{ if(confirm("Effacer ton profil et tout ton historique ?")){ localStorage.removeItem(LS); S=null; location.reload(); } };
