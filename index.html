@@ -264,7 +264,7 @@
       <p class="tiny muted" style="margin-top:8px">Débutant = jamais fait de muscu structurée. C'est le cas de la plupart. Ça règle la difficulté de départ.</p>
     </div>
     <button class="btn" id="btn-create">Créer mon profil</button>
-    <p class="synced">Tes données restent sur ton téléphone. <button class="link" id="show-sync-onboard">Sync coach ?</button></p>
+    <p class="synced">Tes données restent sur ton téléphone, et tes séances sont envoyées au coach automatiquement.</p>
   </section>
 
   <!-- HOME -->
@@ -429,11 +429,9 @@
     <div class="topbar"><div class="rnd" id="set-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div><div class="t">Réglages</div></div>
     <h1>Réglages</h1>
     <div class="card">
-      <h3>Sync coach (optionnel)</h3>
-      <p class="tiny muted">Colle l'URL du script Google Sheet du coach. Tes séances lui seront envoyées à la fin de chaque séance. Sans URL, tout reste sur ton téléphone.</p>
-      <label>URL du script coach</label>
-      <input id="set-sync" placeholder="https://script.google.com/..." autocomplete="off">
-      <button class="btn sec" id="set-save-sync" style="margin-top:10px">Enregistrer</button>
+      <h3>Sync coach</h3>
+      <p class="tiny muted">Tes séances et exercices sont envoyés automatiquement au coach dès qu'ils sont terminés — pas de configuration à faire. Si le réseau coupe, ils restent en attente sur ton téléphone et repartent tout seuls dès que la connexion revient.</p>
+      <p class="tiny" id="set-syncstatus" style="color:var(--accent); font-weight:600; margin-top:8px"></p>
     </div>
     <div class="card">
       <h3>Micro (compteur voix)</h3>
@@ -449,7 +447,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 2.3 · si tu ne vois pas « 2.3 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 2.4 · si tu ne vois pas « 2.4 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -602,9 +600,8 @@ const LS = "detente_m1_v1";
 let S = load();
 function load(){ try{ return JSON.parse(localStorage.getItem(LS)) || null; }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
-const DEFAULT_SYNC_URL = "https://script.google.com/macros/s/AKfycbxcphIe5rjnHk12XyAGJ2F44OLGsHY5NyP6IPbE-UO-aC5kO1JWyoFteCFWePx87hrT/exec";
 function freshState(p){
-  return { profile:p, done:{}, completedSeq:[], history:[], syncUrl:DEFAULT_SYNC_URL, sens:14, autoEnd:true, opts:{kit:false, gym:false},
+  return { profile:p, done:{}, completedSeq:[], history:[], sens:14, autoEnd:true, opts:{kit:false, gym:false},
            playerId:"p_"+Math.random().toString(36).slice(2,9), jumps:[{cm:p.initialJump, at:Date.now()}] };
 }
 
@@ -688,20 +685,48 @@ function voiceStop(){
   voice={active:false, stream:null, raf:null, ctx:null};
 }
 
-/* ============ SYNC ============ */
-async function syncSession(payload){
-  const url = S.syncUrl || DEFAULT_SYNC_URL;
-  if(!url) return "local";
-  try{ await fetch(url, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload) }); return "sent"; }
-  catch(e){ return "failed"; }
+/* ============ SYNC (Firebase Realtime Database — REST, même base que le shotlist) ============ */
+const FB_BASE = "https://shotlist-298e2-default-rtdb.europe-west1.firebasedatabase.app";
+const FB_ROOM = "herizo-u20"; // chemin dédié à Détente, séparé de /shots et /notes du shotlist
+const OUTBOX_KEY = "detente_outbox_v1";
+
+function fbPath(kind){ return `${FB_BASE}/detente/${FB_ROOM}/${kind}.json`; }
+function loadOutbox(){ try{ return JSON.parse(localStorage.getItem(OUTBOX_KEY)) || []; }catch(e){ return []; } }
+function saveOutbox(list){ try{ localStorage.setItem(OUTBOX_KEY, JSON.stringify(list)); }catch(e){} }
+
+// 1) on stocke localement AVANT d'essayer d'envoyer (survit à une coupure, un redémarrage,
+//    ou la fermeture de l'appli — rien n'est perdu tant que ce n'est pas confirmé envoyé).
+function queueSync(kind, payload){
+  const box = loadOutbox();
+  box.push({ id: Date.now()+"_"+Math.random().toString(36).slice(2,7), kind, payload, tries:0 });
+  saveOutbox(box);
+  flushOutbox();
 }
-// File d'envoi : un seul envoi à la fois, dans l'ordre, pour ne jamais empiler
-// plusieurs écritures en même temps sur le Sheet (qui les traite une par une).
-let _syncChain = Promise.resolve();
-function queueSync(payload){
-  _syncChain = _syncChain.then(()=> syncSession(payload)).catch(()=> "failed");
-  return _syncChain;
+
+// 2) on vide la file un par un (POST = clé unique générée par Firebase à chaque écriture,
+//    donc aucune collision possible même si plusieurs téléphones écrivent en même temps).
+let _flushing=false;
+async function flushOutbox(){
+  if(_flushing) return; _flushing=true;
+  try{
+    let box=loadOutbox();
+    while(box.length){
+      const item=box[0];
+      try{
+        const r=await fetch(fbPath(item.kind), { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(item.payload) });
+        if(!r.ok) throw new Error("HTTP "+r.status);
+        box.shift(); saveOutbox(box);            // confirmé reçu → on retire de la file
+      }catch(e){
+        item.tries=(item.tries||0)+1; saveOutbox(box);
+        break;                                    // réseau indispo → on s'arrête, on réessaiera
+      }
+    }
+  } finally { _flushing=false; }
 }
+// on retente : au retour du réseau, quand l'appli redevient visible, et périodiquement.
+window.addEventListener("online", flushOutbox);
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") flushOutbox(); });
+setInterval(flushOutbox, 20000);
 
 /* ============ RUNTIME ============ */
 let RUN=null; let nextTimer=null;
@@ -965,11 +990,11 @@ function logExercise(skipped){
   };
   RUN.exLog.push(rec);
   RUN.exStartTs=null;
-  // envoi mis en file (fin de cet exercice) — un seul envoi à la fois vers le Sheet
-  queueSync({ type:"exercise", playerId:S.playerId, player:{name:S.profile.name},
+  // en file locale d'abord (persistée), puis envoyée dès que possible — rien n'est perdu
+  queueSync("exercises", { playerId:S.playerId, player:S.profile.name,
     session:RUN.sKey, week:RUN.week,
     i:rec.i, name:rec.name, start:rec.start, end:rec.end, durationSec:rec.durationSec,
-    setsTarget:rec.setsTarget, reps:rec.reps, skipped:rec.skipped });
+    setsTarget:rec.setsTarget, reps:rec.reps, skipped:rec.skipped, recu:new Date().toISOString() });
 }
 
 function endExercise(announce, skipped){
@@ -1041,13 +1066,13 @@ function finishSession(){
   $("#sum-ex").textContent=RUN.sess.ex.length;
   $("#sum-reps").textContent=totalReps;
   $("#sum-note").textContent = replay ? "Rejeu — ça n'affecte pas ton programme ni ton calendrier." : (isDeload(RUN.week) ? "Semaine de décharge — récup validée." : "Récupère bien, dors, hydrate-toi : c'est là que la détente se construit.");
-  $("#sum-sync").textContent="";
   show("s-summary");
   if(!replay){
-    queueSync({ type:"session", playerId:S.playerId, player:{name:S.profile.name, height:S.profile.height, weight:S.profile.weight, initialJump:S.profile.initialJump, level:S.profile.level},
+    queueSync("sessions", { playerId:S.playerId, player:S.profile.name, height:S.profile.height, weight:S.profile.weight, initialJump:S.profile.initialJump, level:S.profile.level,
       session:RUN.sKey, week:RUN.week,
-      startedAt:new Date(RUN.startedAt).toISOString(), endedAt:new Date().toISOString(), durationSec:Math.round(dur/1000), totalReps })
-      .then(r=>{ $("#sum-sync").textContent = r==="sent" ? "✓ Envoyé au coach" : (r==="failed" ? "Envoi coach échoué — réessaie plus tard" : "Enregistré sur ton téléphone"); });
+      startedAt:new Date(RUN.startedAt).toISOString(), endedAt:new Date().toISOString(), durationSec:Math.round(dur/1000), totalReps, recu:new Date().toISOString() });
+    $("#sum-sync").textContent = loadOutbox().length ? "Envoi en cours…" : "✓ Envoyé au coach";
+    setTimeout(()=>{ const el=$("#sum-sync"); if(el) el.textContent = loadOutbox().length ? "Envoi en attente — reprendra dès que possible" : "✓ Envoyé au coach"; }, 2500);
   } else {
     $("#sum-sync").textContent="Rejeu — non envoyé au coach";
   }
@@ -1077,7 +1102,6 @@ $("#btn-create").onclick=()=>{
   S=freshState({name,height:height||null,weight:weight||null,initialJump:jump,level,createdAt:Date.now()});
   save(); renderHome(); show("s-home");
 };
-$("#show-sync-onboard").onclick=()=> tempSettings();
 
 $("#btn-settings").onclick=()=> openSettings();
 $("#sess-back").onclick=()=>{ if(RUN && RUN.origin==="s-calendar"){ renderCalendar(); show("s-calendar"); } else { renderHome(); show("s-home"); } };
@@ -1117,20 +1141,19 @@ $("#sum-home").onclick=()=>{ renderHome(); show("s-home"); };
 $("#p-save").onclick=()=>{
   const v=+$("#p-input").value; if(!v) return;
   S.jumps.push({cm:v, at:Date.now()}); save(); $("#p-input").value=""; renderProgress();
-  queueSync({type:"retest", playerId:S.playerId, player:S.profile, jumpCm:v, at:new Date().toISOString()});
+  queueSync("retests", {playerId:S.playerId, player:S.profile.name, jumpCm:v, at:new Date().toISOString(), recu:new Date().toISOString()});
 };
 
 function openSettings(){
-  $("#set-sync").value=S.syncUrl||"";
   $("#set-sens").value=S.sens||14;
   $$("#set-autoend button").forEach(b=>b.classList.toggle("on", b.dataset.v===((S.autoEnd!==false)?"on":"off")));
   const p=S.profile;
   $("#set-profile").textContent = `${p.name} · ${p.height||'–'} cm · ${p.weight||'–'} kg · détente départ ${p.initialJump} cm · niveau ${p.level}`;
+  const n=loadOutbox().length;
+  $("#set-syncstatus").textContent = n>0 ? `${n} en attente d'envoi — reprendra automatiquement` : "✓ Tout est synchronisé";
   show("s-settings");
 }
-function tempSettings(){ S=S||{syncUrl:"",sens:14}; $("#set-sync").value=S.syncUrl||""; $("#set-sens").value=14; $("#set-profile").textContent="(profil pas encore créé)"; show("s-settings"); }
 $("#set-back").onclick=()=>{ if(S&&S.profile){ renderHome(); show("s-home"); } else show("s-onboard"); };
-$("#set-save-sync").onclick=()=>{ if(!S)S={}; S.syncUrl=$("#set-sync").value.trim(); if(S.profile) save(); alert("URL enregistrée."); };
 $("#set-sens").oninput=()=>{ if(S){ S.sens=+$("#set-sens").value; if(S.profile) save(); } };
 $("#set-autoend").onclick=e=>{ if(e.target.dataset.v){ if(!S)S={}; S.autoEnd=(e.target.dataset.v==="on"); $$("#set-autoend button").forEach(b=>b.classList.remove("on")); e.target.classList.add("on"); if(S.profile) save(); } };
 $("#set-reset").onclick=()=>{ if(confirm("Effacer ton profil et tout ton historique ?")){ localStorage.removeItem(LS); S=null; location.reload(); } };
@@ -1148,9 +1171,9 @@ $("#cal-next").onclick=()=>{ if(!calRef) return; calRef.m++; if(calRef.m>11){cal
 if(S && S.profile){
   if(!S.completedSeq){ S.completedSeq = (S.history||[]).slice().reverse().map(h=>({w:h.week, s:h.session, at:h.at})).slice(0,12); save(); }
   if(!S.opts){ S.opts={kit:false, gym:false}; save(); }
-  if(!S.syncUrl){ S.syncUrl = DEFAULT_SYNC_URL; save(); }
   renderHome(); show("s-home");
 } else { show("s-onboard"); }
+flushOutbox(); // tente d'envoyer tout ce qui serait resté en attente d'une session précédente
 if("serviceWorker" in navigator){
   let refreshing=false;
   navigator.serviceWorker.addEventListener("controllerchange", ()=>{ if(refreshing) return; refreshing=true; location.reload(); });
