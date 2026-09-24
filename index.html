@@ -449,7 +449,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 2.2 · si tu ne vois pas « 2.2 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 2.3 · si tu ne vois pas « 2.3 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -630,6 +630,24 @@ function estMin(sess){ let s=0; sess.ex.forEach(e=>{ s+=e.sets*((e.hold||25)+ (e
 /* ============ AUDIO ============ */
 let AC=null;
 function unlockAudio(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==="suspended") AC.resume(); }
+
+/* ============ WAKE LOCK (écran allumé pendant la séance) ============ */
+let wakeLock=null, wakeLockWanted=false;
+async function acquireWakeLock(){
+  if(!("wakeLock" in navigator)) return;
+  try{
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", ()=>{ wakeLock=null; });
+  }catch(e){ wakeLock=null; }
+}
+function releaseWakeLock(){
+  wakeLockWanted=false;
+  if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock=null; }
+}
+function startWakeLock(){ wakeLockWanted=true; acquireWakeLock(); }
+document.addEventListener("visibilitychange", ()=>{
+  if(wakeLockWanted && document.visibilityState==="visible" && !wakeLock) acquireWakeLock();
+});
 function beep(freq, dur, vol){ if(!AC) return; try{
   const o=AC.createOscillator(), g=AC.createGain();
   o.type="sine"; o.frequency.value=freq; g.gain.value=vol||0.18;
@@ -853,6 +871,7 @@ function syncOptButtons(){
 
 function startSession(){
   unlockAudio();
+  startWakeLock();
   RUN.startedAt=Date.now(); RUN.exIdx=0; RUN.setIdx=0;
   loadExercise();
   show("s-exercise");
@@ -1006,6 +1025,7 @@ function endRest(){
 
 function finishSession(){
   stopVoiceAll();
+  releaseWakeLock();
   const dur=Date.now()-RUN.startedAt;
   const totalReps=Object.values(RUN.reps).reduce((a,b)=>a+b,0);
   const replay=!!RUN.replay;
@@ -1065,7 +1085,7 @@ $("#btn-start-session").onclick=startSession;
 $("#opt-kit").onclick=(e)=>{ if(!e.target.dataset.v) return; if(!S.opts)S.opts={kit:false,gym:false}; S.opts.kit=(e.target.dataset.v==="avec"); if(S.profile)save(); syncOptButtons(); renderSessExlist(); };
 $("#opt-lieu").onclick=(e)=>{ if(!e.target.dataset.v) return; if(!S.opts)S.opts={kit:false,gym:false}; if(!S.opts.kit) return; S.opts.gym=(e.target.dataset.v==="salle"); if(S.profile)save(); syncOptButtons(); renderSessExlist(); };
 
-$("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ clearNext(); stopVoiceAll(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
+$("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ clearNext(); stopVoiceAll(); releaseWakeLock(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
 $("#ex-skip").onclick=()=>{ clearInterval(holdTick); endExercise(false, true); };
 $("#ex-prev").onclick=prevExercise;
 $("#ex-setdone").onclick=validateRepSide;
