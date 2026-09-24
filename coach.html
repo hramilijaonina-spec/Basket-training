@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0E0F13">
+<title>Coach — Détente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E0F13; --surface:#17191F; --surface-2:#202329; --surface-3:#2A2E36;
+    --ink:#FFFFFF; --ink-soft:#9CA3AD; --ink-faint:#666C75; --line:#262A31;
+    --accent:#2FE0A0; --accent-ink:#052018; --warn:#F5B23C; --hot:#FF5A5A;
+    --font:"Poppins", system-ui, -apple-system, sans-serif; --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{background:var(--bg); color:var(--ink); font-family:var(--font); font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; padding-bottom:60px;}
+  .wrap{max-width:1000px; margin:0 auto; padding:20px 18px 40px;}
+  a{color:var(--accent);}
+
+  header.top{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap;}
+  .kicker{font-weight:600; font-size:12.5px; letter-spacing:.6px; color:var(--accent); text-transform:uppercase; margin-bottom:4px;}
+  h1{font-weight:800; font-size:clamp(24px,5vw,32px); margin:0; letter-spacing:-.3px;}
+  .refreshbar{display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--ink-faint);}
+  .refreshbar button{background:var(--surface-2); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:8px 14px; font-weight:600; font-size:13px; cursor:pointer; font-family:inherit;}
+  .refreshbar button:hover{background:var(--surface-3);}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--accent); display:inline-block; animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:26px;}
+  @media (max-width:700px){ .stats{grid-template-columns:repeat(2,1fr);} }
+  .stat{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px;}
+  .stat .n{font-weight:800; font-size:28px; color:var(--accent);}
+  .stat .l{font-size:12.5px; color:var(--ink-soft); font-weight:600; margin-top:2px;}
+
+  h2{font-weight:700; font-size:19px; margin:0 0 14px;}
+  .players{display:grid; gap:12px; margin-bottom:30px;}
+  .pcard{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  .phead{display:flex; align-items:center; gap:14px; padding:16px; cursor:pointer;}
+  .avatar{width:44px; height:44px; border-radius:50%; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:17px; flex:0 0 auto;}
+  .pinfo{flex:1; min-width:0;}
+  .pname{font-weight:700; font-size:16px;}
+  .pmeta{font-size:12.5px; color:var(--ink-soft); margin-top:2px; display:flex; gap:10px; flex-wrap:wrap;}
+  .pmeta b{color:var(--ink);}
+  .pmeta .skip-bad{color:var(--hot); font-weight:700;}
+  .pmeta .skip-ok{color:var(--accent); font-weight:700;}
+  .pprog{flex:0 0 auto; text-align:right;}
+  .pprog .big{font-weight:800; font-size:18px;}
+  .pprog .small{font-size:11px; color:var(--ink-faint);}
+  .pline{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden; margin-top:8px;}
+  .pline .fill{height:100%; background:var(--accent);}
+  .chev{color:var(--ink-faint); font-size:20px; transition:transform .2s;}
+  .pcard.open .chev{transform:rotate(90deg);}
+  .pbody{display:none; border-top:1px solid var(--line);}
+  .pcard.open .pbody{display:block;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; font-weight:600; color:var(--ink-faint); font-size:11.5px; text-transform:uppercase; letter-spacing:.3px; padding:9px 14px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  td{padding:9px 14px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700;}
+  .badge.skip{background:color-mix(in srgb,var(--hot) 18%, transparent); color:var(--hot);}
+  .badge.ok{background:color-mix(in srgb,var(--accent) 16%, transparent); color:var(--accent);}
+  .tablewrap{overflow-x:auto;}
+
+  .feed{display:grid; gap:8px;}
+  .frow{display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:11px 14px;}
+  .frow .fname{flex:1; font-size:13.5px;}
+  .frow .fname b{font-weight:600;}
+  .frow .ftime{font-size:12px; color:var(--ink-faint); white-space:nowrap;}
+
+  .empty{color:var(--ink-faint); font-size:13.5px; text-align:center; padding:30px 0;}
+  .err{background:color-mix(in srgb,var(--hot) 14%, transparent); border:1px solid color-mix(in srgb,var(--hot) 40%, transparent); border-radius:12px; padding:12px 16px; font-size:13.5px; margin-bottom:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="kicker">Programme Détente</div>
+      <h1>Tableau de bord coach</h1>
+    </div>
+    <div class="refreshbar">
+      <span class="dot"></span>
+      <span id="last-update">chargement…</span>
+      <button id="btn-refresh">Rafraîchir</button>
+    </div>
+  </header>
+
+  <div id="err-box"></div>
+
+  <div class="stats" id="stats"></div>
+
+  <h2>Joueurs</h2>
+  <div class="players" id="players"><div class="empty">Chargement…</div></div>
+
+  <h2>Activité récente</h2>
+  <div class="feed" id="feed"></div>
+</div>
+
+<script>
+"use strict";
+const FB_BASE = "https://shotlist-298e2-default-rtdb.europe-west1.firebasedatabase.app";
+const FB_ROOM = "herizo-u20";
+function fbPath(kind){ return `${FB_BASE}/detente/${FB_ROOM}/${kind}.json`; }
+const SESSION_TYPE = { A:"Bas du corps + plyo", B:"Haut + core + unilatéral", C:"Explosivité + core" };
+
+const $=s=>document.querySelector(s);
+
+async function fetchKind(kind){
+  try{
+    const r = await fetch(fbPath(kind)+"?_="+Date.now(), {cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return (await r.json()) || {};
+  }catch(e){ throw e; }
+}
+
+function ts(v){ const t=Date.parse(v||0); return isNaN(t)?0:t; }
+function relTime(t){
+  if(!t) return "jamais";
+  const s=Math.floor((Date.now()-t)/1000);
+  if(s<45) return "à l'instant";
+  if(s<3600) return Math.floor(s/60)+" min";
+  if(s<86400) return Math.floor(s/3600)+" h";
+  return Math.floor(s/86400)+" j";
+}
+function fmtClock(t){ return t? new Date(t).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : "–"; }
+function fmtDur(sec){ if(sec==null) return "–"; const m=Math.floor(sec/60), s=sec%60; return m>0? `${m}m${String(s).padStart(2,'0')}` : `${s}s`; }
+function isSkip(e){ return !!e.skipped || (e.durationSec!=null && e.durationSec<10); }
+function isToday(t){ const d=new Date(t), n=new Date(); return d.toDateString()===n.toDateString(); }
+function isThisWeek(t){ return (Date.now()-t) < 7*86400000; }
+
+function buildPlayers(data){
+  const players={};
+  function ensure(pid,name){
+    if(!pid) pid="inconnu";
+    if(!players[pid]) players[pid]={ id:pid, name:name||pid, exercises:[], sessions:[], retests:[], lastAt:0 };
+    if(name) players[pid].name=name;
+    return players[pid];
+  }
+  Object.entries(data.exercises||{}).forEach(([key,e])=>{
+    const p=ensure(e.playerId, e.player); p.exercises.push({...e, _key:key});
+    const t=ts(e.recu||e.end||e.start); if(t>p.lastAt) p.lastAt=t;
+  });
+  Object.entries(data.sessions||{}).forEach(([key,s])=>{
+    const p=ensure(s.playerId, s.player); p.sessions.push({...s, _key:key});
+    const t=ts(s.recu||s.endedAt||s.startedAt); if(t>p.lastAt) p.lastAt=t;
+  });
+  Object.entries(data.retests||{}).forEach(([key,r])=>{
+    const p=ensure(r.playerId, r.player); p.retests.push({...r, _key:key});
+    const t=ts(r.recu||r.at); if(t>p.lastAt) p.lastAt=t;
+  });
+  return Object.values(players).sort((a,b)=>b.lastAt-a.lastAt);
+}
+function progressCount(p){ return Math.min(new Set(p.sessions.map(s=>s.week+"-"+s.session)).size, 12); }
+function skipStats(p){ const t=p.exercises.length, sk=p.exercises.filter(isSkip).length; return {total:t, skipped:sk, rate: t? Math.round(sk/t*100):0}; }
+function initials(name){ return (name||"?").trim().slice(0,2).toUpperCase(); }
+
+function renderStats(players, allExercises, allSessions){
+  const activePlayers = players.filter(p=>isThisWeek(p.lastAt)).length;
+  const sessionsThisWeek = allSessions.filter(s=>isThisWeek(ts(s.recu||s.endedAt))).length;
+  const exToday = allExercises.filter(e=>isToday(ts(e.recu||e.end))).length;
+  const totalEx=allExercises.length, totalSkip=allExercises.filter(isSkip).length;
+  const skipRate = totalEx? Math.round(totalSkip/totalEx*100) : 0;
+  $("#stats").innerHTML = [
+    [players.length, "Joueurs"],
+    [activePlayers, "Actifs cette semaine"],
+    [sessionsThisWeek, "Séances cette semaine"],
+    [exToday, "Exercices aujourd'hui"],
+  ].map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("")
+  + ""; // (taux de skip affiché par joueur, pas globalement pour éviter de noyer l'info)
+}
+
+function renderPlayers(players){
+  const box=$("#players");
+  if(!players.length){ box.innerHTML='<div class="empty">Aucune donnée reçue pour l\'instant.</div>'; return; }
+  box.innerHTML = players.map((p,idx)=>{
+    const prog=progressCount(p), pct=Math.round(prog/12*100), sk=skipStats(p);
+    const rows = p.exercises.slice().sort((a,b)=> ts(b.recu||b.end)-ts(a.recu||a.end)).slice(0,25).map(e=>{
+      const skip=isSkip(e);
+      return `<tr>
+        <td>${fmtClock(ts(e.recu||e.end))}</td>
+        <td>${(SESSION_TYPE[e.session]||e.session)} · Sem${e.week}</td>
+        <td>${e.name||''}</td>
+        <td>${fmtDur(e.durationSec)}</td>
+        <td>${e.reps ?? '–'}${e.setsTarget? ' / '+e.setsTarget+' séries':''}</td>
+        <td>${skip? '<span class="badge skip">Skippé</span>' : '<span class="badge ok">OK</span>'}</td>
+      </tr>`;
+    }).join("");
+    return `<div class="pcard" data-idx="${idx}">
+      <div class="phead">
+        <div class="avatar">${initials(p.name)}</div>
+        <div class="pinfo">
+          <div class="pname">${p.name}</div>
+          <div class="pmeta">
+            <span>Actif : <b>${relTime(p.lastAt)}</b></span>
+            <span>${sk.total} exercice(s)${sk.total? ` · <span class="${sk.rate>20?'skip-bad':'skip-ok'}">${sk.rate}% skippés</span>` : ''}</span>
+          </div>
+          <div class="pline"><div class="fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="pprog"><div class="big">${prog}/12</div><div class="small">séances</div></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="pbody">
+        <div class="tablewrap"><table>
+          <thead><tr><th>Reçu</th><th>Séance</th><th>Exercice</th><th>Durée</th><th>Reps</th><th>État</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="6" class="empty">Aucun exercice.</td></tr>'}</tbody>
+        </table></div>
+      </div>
+    </div>`;
+  }).join("");
+  $$("#players .phead").forEach(el=> el.onclick=()=> el.closest(".pcard").classList.toggle("open"));
+}
+function $$(s){ return Array.from(document.querySelectorAll(s)); }
+
+function renderFeed(allExercises){
+  const items = allExercises.slice().sort((a,b)=> ts(b.recu||b.end)-ts(a.recu||a.end)).slice(0,15);
+  $("#feed").innerHTML = items.length ? items.map(e=>{
+    const skip=isSkip(e);
+    return `<div class="frow">
+      <div class="fname"><b>${e.player||'?'}</b> — ${e.name||''} ${skip?'<span class="badge skip">Skippé</span>':''}</div>
+      <div class="ftime">${relTime(ts(e.recu||e.end))}</div>
+    </div>`;
+  }).join("") : '<div class="empty">Rien pour l\'instant.</div>';
+}
+
+let loading=false;
+async function loadAll(){
+  if(loading) return; loading=true;
+  try{
+    const [exercisesObj, sessionsObj, retestsObj] = await Promise.all([
+      fetchKind("exercises"), fetchKind("sessions"), fetchKind("retests")
+    ]);
+    $("#err-box").innerHTML="";
+    const data={exercises:exercisesObj, sessions:sessionsObj, retests:retestsObj};
+    const players = buildPlayers(data);
+    const allExercises = Object.values(exercisesObj);
+    const allSessions = Object.values(sessionsObj);
+    renderStats(players, allExercises, allSessions);
+    renderPlayers(players);
+    renderFeed(allExercises);
+    $("#last-update").textContent = "Mis à jour " + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }catch(e){
+    $("#err-box").innerHTML = `<div class="err">Impossible de charger les données : ${e.message}. Vérifie ta connexion ou les règles Firebase.</div>`;
+  } finally { loading=false; }
+}
+
+$("#btn-refresh").onclick=loadAll;
+loadAll();
+setInterval(()=>{ if(document.visibilityState==="visible") loadAll(); }, 8000);
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") loadAll(); });
+</script>
+</body>
+</html>
