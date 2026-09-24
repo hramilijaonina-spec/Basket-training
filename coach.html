@@ -107,6 +107,7 @@ const FB_BASE = "https://shotlist-298e2-default-rtdb.europe-west1.firebasedataba
 const FB_ROOM = "herizo-u20";
 function fbPath(kind){ return `${FB_BASE}/detente/${FB_ROOM}/${kind}.json`; }
 const SESSION_TYPE = { A:"Bas du corps + plyo", B:"Haut + core + unilatéral", C:"Explosivité + core" };
+const SESSION_EXCOUNT = { A:7, B:7, C:6 }; // nombre d'exercices attendu par séance (mois 1)
 
 const $=s=>document.querySelector(s);
 
@@ -155,7 +156,16 @@ function buildPlayers(data){
   });
   return Object.values(players).sort((a,b)=>b.lastAt-a.lastAt);
 }
-function progressCount(p){ return Math.min(new Set(p.sessions.map(s=>s.week+"-"+s.session)).size, 12); }
+function progressCount(p){
+  const fromSessions = new Set(p.sessions.map(s=>s.week+"-"+s.session));
+  const exGroups={};
+  p.exercises.forEach(e=>{ const k=e.week+"-"+e.session; exGroups[k]=(exGroups[k]||0)+1; });
+  Object.keys(exGroups).forEach(k=>{
+    const sess=k.split("-")[1];
+    if(exGroups[k] >= (SESSION_EXCOUNT[sess]||99)) fromSessions.add(k);
+  });
+  return Math.min(fromSessions.size, 12);
+}
 function skipStats(p){ const t=p.exercises.length, sk=p.exercises.filter(isSkip).length; return {total:t, skipped:sk, rate: t? Math.round(sk/t*100):0}; }
 function initials(name){ return (name||"?").trim().slice(0,2).toUpperCase(); }
 
