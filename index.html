@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon.svg">
-<title>Détente — Mois 1</title>
+<title>Détente — Programme 3 mois</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -158,16 +158,7 @@
   .counter{display:flex; flex-direction:column; align-items:center; gap:2px; width:100%; flex:1; justify-content:center;}
   .bignum{font-weight:800; font-size:clamp(52px,17vw,88px); line-height:.9;}
   .target-lbl{font-weight:600; font-size:16px; color:var(--ink-soft);}
-  .voicehint{font-weight:700; font-size:16px; color:var(--accent); margin:6px 0 4px; line-height:1.15;}
-  .voicebar{display:flex; align-items:center; gap:10px; width:100%; max-width:320px; margin-bottom:6px;}
-  .meter{flex:1; height:9px; border-radius:6px; background:var(--surface-2); overflow:hidden;}
-  .meter .lvl{height:100%; width:0%; background:var(--accent); transition:width .05s;}
-  .voicebar .pct{font-size:12px; color:var(--ink-faint); min-width:38px; text-align:right;}
-  .micquick{width:100%; max-width:320px; background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:6px;}
-  .micquick label{display:block; margin:0 0 6px; font-size:12px; color:var(--ink-soft); font-weight:600;}
-  .micquick input[type=range]{width:100%;}
-  .micquick-hint{font-size:11px; color:var(--ink-faint); margin-top:6px; line-height:1.3;}
-  .bignum .sl{font-size:.5em; font-weight:700; color:var(--ink-soft); vertical-align:0.14em; margin:0 .04em;}
+  .fait-btn{width:100%; max-width:280px; margin-top:18px;}
   .toast{position:fixed; inset:0; z-index:150; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(6,7,10,.72); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); opacity:0; pointer-events:none; transition:opacity .2s;}
   .toast.show{opacity:1; pointer-events:auto;}
   .toast-box{background:var(--surface-2); border:1px solid var(--line); color:var(--ink); font-weight:700; font-size:19px; padding:20px 26px; border-radius:18px; box-shadow:0 18px 44px rgba(0,0,0,.6); max-width:88%; text-align:center; transform:translateY(10px) scale(.98); transition:transform .2s;}
@@ -244,7 +235,7 @@
 
   <!-- ONBOARDING -->
   <section class="screen" id="s-onboard">
-    <div class="kicker">Programme Détente · Mois 1</div>
+    <div class="kicker">Programme Détente · 3 mois</div>
     <h1>Crée ton <span class="accent">profil</span></h1>
     <p class="muted" style="margin-top:0">Quelques infos pour caler ton objectif et suivre tes progrès.</p>
     <div class="card">
@@ -349,21 +340,11 @@
       <p class="exwhy" id="ex-obj" style="display:none"></p>
       <div class="settrack" id="ex-settrack"></div>
 
-      <!-- rep counter -->
+      <!-- rep target + manual "Fait" -->
       <div class="counter" id="ex-counter">
-        <div class="bignum" id="ex-count">0/12</div>
+        <div class="bignum" id="ex-count">12</div>
         <div class="target-lbl" id="ex-repunit">reps</div>
-        <div class="voicehint" id="ex-voicehint">🎤 Comptez à voix haute</div>
-        <div class="voicebar">
-          <div class="meter"><div class="lvl" id="ex-level"></div></div>
-          <span class="pct" id="ex-lvltxt">0%</span>
-          <button class="qbtn" id="ex-setgear" aria-label="Réglage du micro">⚙</button>
-        </div>
-        <div class="micquick" id="ex-micquick" style="display:none">
-          <label>Sensibilité du micro</label>
-          <input type="range" id="ex-sens" min="6" max="30">
-          <div class="micquick-hint">Monte si l'appli ne compte pas assez ; baisse si elle compte toute seule.</div>
-        </div>
+        <button class="btn fait-btn" id="ex-fait">Fait ✓</button>
       </div>
 
       <!-- hold timer -->
@@ -376,9 +357,6 @@
       <div class="controls">
         <button class="cbtn" id="ex-prev" aria-label="Précédent">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <button class="cbtn big" id="ex-setdone" aria-label="Valider la série">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
         </button>
         <button class="cbtn" id="ex-skip" aria-label="Suivant">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
@@ -436,20 +414,9 @@
       <p class="tiny muted" id="set-checkresult" style="margin-top:6px"></p>
     </div>
     <div class="card">
-      <h3>Micro (compteur voix)</h3>
-      <p class="tiny muted">Le comptage vocal est automatique : dis chaque rep à voix haute et l'appli compte. Autorise le micro à la première séance.</p>
-      <label>Sensibilité du micro</label>
-      <input id="set-sens" type="range" min="6" max="30" value="14">
-    </div>
-    <div class="card">
-      <h3>Fin de série automatique</h3>
-      <p class="tiny muted">Valide la série toute seule à l'objectif de reps → repos → série suivante. Les exercices « par jambe » gardent le bouton manuel.</p>
-      <div class="seg" id="set-autoend"><button data-v="on" class="on">Activé</button><button data-v="off">Désactivé</button></div>
-    </div>
-    <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 2.5 · si tu ne vois pas « 2.5 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 2.6 · si tu ne vois pas « 2.6 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -501,45 +468,127 @@
 <script>
 "use strict";
 
-/* ============ PROGRAM DATA — MOIS 1 : FONDATIONS ============ */
-const BLOCK = {
-  name:"Fondations",
-  sessions:{
-    A:{ title:"Séance A", tag:"BAS DU CORPS + PLYO", type:"Bas du corps + plyo", rest:75,
-        obj:"Bas du corps et première pliométrie : construire la force des jambes et apprendre à réceptionner.",
-        ex:[
-          {n:"Squat au poids du corps", v:{gym:"Back squat (barre)", home:"Goblet squat (haltère)"}, o:"Force de base quadriceps/fessiers — le moteur du saut.", sets:4, reps:12, rest:75, sub:"tempo 3 s à la descente"},
-          {n:"Fente arrière alternée", v:{gym:"Fente arrière (barre/haltères)", home:"Fente arrière (haltères)"}, o:"Renforce chaque jambe et stabilise le genou.", sets:3, reps:10, rest:60, unit:"/jambe"},
-          {n:"Soulevé roumain 1 jambe", v:{gym:"Soulevé roumain 1 jambe (haltère)", home:"Soulevé roumain 1 jambe (haltère)"}, o:"Ischios et chaîne postérieure, clés du saut.", sets:3, reps:10, rest:60, unit:"/jambe"},
-          {n:"Extensions mollets debout", v:{gym:"Mollets debout (machine/barre)", home:"Mollets debout (haltères)"}, o:"Mollet et tendon d'Achille : le ressort du saut.", sets:4, reps:15, rest:45, sub:"tempo lent"},
-          {n:"Drop and stick", o:"Apprendre la réception amortie — ta 1ʳᵉ prévention blessure.", sets:5, reps:3, rest:60, sub:"saut bas, réception figée 2 s"},
-          {n:"Pogos", o:"Réveille la raideur de cheville et le rebond élastique.", sets:3, reps:15, rest:45},
-          {n:"Gainage planche", o:"Gaine le tronc pour transférer la force jambes → haut.", sets:3, hold:35, rest:45},
-        ]},
-    B:{ title:"Séance B", tag:"HAUT + CORE + UNILATÉRAL", type:"Haut + core + unilatéral", rest:60,
-        obj:"Haut du corps, gainage et unilatéral : équilibrer le corps et solidifier le tronc.",
-        ex:[
-          {n:"Pompes", v:{gym:"Développé couché (barre légère)", home:"Pompes lestées (sac/gilet)"}, o:"Force du haut pour le duel et l'équilibre en l'air.", sets:4, reps:10},
-          {n:"Rowing élastique", v:{gym:"Rowing barre / tirage machine", home:"Rowing haltère"}, o:"Muscle le dos, équilibre les épaules, protège la posture.", sets:4, reps:10, sub:"ou tirage sous table"},
-          {n:"Développé épaules", v:{gym:"Développé militaire (barre)", home:"Développé épaules (haltères)"}, o:"Épaules solides pour le tir et le rebond.", sets:3, reps:10, sub:"haltère/élastique ou pike push-up"},
-          {n:"Step-up sur banc", v:{gym:"Step-up lesté (haltères)", home:"Step-up lesté (haltères)"}, o:"Force unilatérale de montée — proche du geste de saut.", sets:3, reps:10, unit:"/jambe"},
-          {n:"Dead bug", o:"Contrôle du tronc et coordination.", sets:3, reps:8, unit:"/côté"},
-          {n:"Gainage latéral", o:"Obliques et bassin stables à la réception.", sets:3, hold:25, unit:"/côté"},
-          {n:"Chaise iso (wall sit)", o:"Endurance de force des cuisses, prépare les tendons.", sets:3, hold:40},
-        ]},
-    C:{ title:"Séance C", tag:"EXPLOSIVITÉ + CORE", type:"Explosivité + core", rest:90,
-        obj:"Explosivité et gainage : premières conversions force → saut, en douceur.",
-        ex:[
-          {n:"Squat jump bas", o:"Convertir la force en saut, réception molle.", sets:4, reps:5, rest:90},
-          {n:"Broad jump", o:"Puissance horizontale et réception maîtrisée.", sets:4, reps:4, rest:90},
-          {n:"Skips explosifs", o:"Fréquence d'appui et coordination explosive.", sets:4, hold:15, rest:75},
-          {n:"Fente sautée", o:"Puissance unilatérale, proche du saut en course.", sets:3, reps:6, rest:75, unit:"/jambe"},
-          {n:"Mollet iso sur marche", o:"Renforce le tendon d'Achille en isométrie.", sets:3, hold:30},
-          {n:"Hollow hold", o:"Gainage global pour un corps solide en l'air.", sets:3, hold:25},
-        ]},
-  }
-};
+/* ============ PROGRAM DATA — 3 MOIS ============ */
+const BLOCKS = [
+  /* ===== MOIS 1 — FONDATIONS ===== */
+  { name:"Fondations",
+    sessions:{
+      A:{ title:"Séance A", tag:"BAS DU CORPS + PLYO", type:"Bas du corps + plyo", rest:75,
+          obj:"Bas du corps et première pliométrie : construire la force des jambes et apprendre à réceptionner.",
+          ex:[
+            {n:"Squat au poids du corps", v:{gym:"Back squat (barre)", home:"Goblet squat (haltère)"}, o:"Force de base quadriceps/fessiers — le moteur du saut.", sets:4, reps:12, rest:75, sub:"tempo 3 s à la descente"},
+            {n:"Fente arrière alternée", v:{gym:"Fente arrière (barre/haltères)", home:"Fente arrière (haltères)"}, o:"Renforce chaque jambe et stabilise le genou.", sets:3, reps:10, rest:60, unit:"/jambe"},
+            {n:"Soulevé roumain 1 jambe", v:{gym:"Soulevé roumain 1 jambe (haltère)", home:"Soulevé roumain 1 jambe (haltère)"}, o:"Ischios et chaîne postérieure, clés du saut.", sets:3, reps:10, rest:60, unit:"/jambe"},
+            {n:"Extensions mollets debout", v:{gym:"Mollets debout (machine/barre)", home:"Mollets debout (haltères)"}, o:"Mollet et tendon d'Achille : le ressort du saut.", sets:4, reps:15, rest:45, sub:"tempo lent"},
+            {n:"Drop and stick", o:"Apprendre la réception amortie — ta 1ʳᵉ prévention blessure.", sets:5, reps:3, rest:60, sub:"saut bas, réception figée 2 s"},
+            {n:"Pogos", o:"Réveille la raideur de cheville et le rebond élastique.", sets:3, reps:15, rest:45},
+            {n:"Gainage planche", o:"Gaine le tronc pour transférer la force jambes → haut.", sets:3, hold:35, rest:45},
+          ]},
+      B:{ title:"Séance B", tag:"HAUT + CORE + UNILATÉRAL", type:"Haut + core + unilatéral", rest:60,
+          obj:"Haut du corps, gainage et unilatéral : équilibrer le corps et solidifier le tronc.",
+          ex:[
+            {n:"Pompes", v:{gym:"Développé couché (barre légère)", home:"Pompes lestées (sac/gilet)"}, o:"Force du haut pour le duel et l'équilibre en l'air.", sets:4, reps:10},
+            {n:"Rowing élastique", v:{gym:"Rowing barre / tirage machine", home:"Rowing haltère"}, o:"Muscle le dos, équilibre les épaules, protège la posture.", sets:4, reps:10, sub:"ou tirage sous table"},
+            {n:"Développé épaules", v:{gym:"Développé militaire (barre)", home:"Développé épaules (haltères)"}, o:"Épaules solides pour le tir et le rebond.", sets:3, reps:10, sub:"haltère/élastique ou pike push-up"},
+            {n:"Step-up sur banc", v:{gym:"Step-up lesté (haltères)", home:"Step-up lesté (haltères)"}, o:"Force unilatérale de montée — proche du geste de saut.", sets:3, reps:10, unit:"/jambe"},
+            {n:"Dead bug", o:"Contrôle du tronc et coordination.", sets:3, reps:8, unit:"/côté"},
+            {n:"Gainage latéral", o:"Obliques et bassin stables à la réception.", sets:3, hold:25, unit:"/côté"},
+            {n:"Chaise iso (wall sit)", o:"Endurance de force des cuisses, prépare les tendons.", sets:3, hold:40},
+          ]},
+      C:{ title:"Séance C", tag:"EXPLOSIVITÉ + CORE", type:"Explosivité + core", rest:90,
+          obj:"Explosivité et gainage : premières conversions force → saut, en douceur.",
+          ex:[
+            {n:"Squat jump bas", o:"Convertir la force en saut, réception molle.", sets:4, reps:5, rest:90},
+            {n:"Broad jump", o:"Puissance horizontale et réception maîtrisée.", sets:4, reps:4, rest:90},
+            {n:"Skips explosifs", o:"Fréquence d'appui et coordination explosive.", sets:4, hold:15, rest:75},
+            {n:"Fente sautée", o:"Puissance unilatérale, proche du saut en course.", sets:3, reps:6, rest:75, unit:"/jambe"},
+            {n:"Mollet iso sur marche", o:"Renforce le tendon d'Achille en isométrie.", sets:3, hold:30},
+            {n:"Hollow hold", o:"Gainage global pour un corps solide en l'air.", sets:3, hold:25},
+          ]},
+    }
+  },
+  /* ===== MOIS 2 — PUISSANCE ===== */
+  { name:"Puissance",
+    sessions:{
+      A:{ title:"Séance A", tag:"BAS DU CORPS + PLYO", type:"Bas du corps + plyo", rest:75,
+          obj:"Convertir la force construite en puissance : sauts plus francs, charges plus explosives.",
+          ex:[
+            {n:"Squat sauté avec contre-mouvement", v:{gym:"Squat sauté chargé (gilet lesté)", home:"Squat sauté (haltères légers)"}, o:"Convertir la force en puissance verticale explosive.", sets:4, reps:6, rest:90, sub:"réception amortie, repars vite"},
+            {n:"Fente bulgare", v:{gym:"Fente bulgare (barre)", home:"Fente bulgare (haltères)"}, o:"Force unilatérale lourde — pilier de la puissance de jambe.", sets:3, reps:8, rest:60, unit:"/jambe"},
+            {n:"Soulevé de terre roumain", v:{gym:"Soulevé de terre roumain (barre)", home:"Soulevé de terre roumain (haltères lourds)"}, o:"Chaîne postérieure plus lourde pour plus de puissance au sol.", sets:4, reps:8, rest:75},
+            {n:"Mollets sautés", o:"Renforce le ressort de cheville en dynamique.", sets:4, reps:12, rest:45, sub:"réactif, contact au sol court"},
+            {n:"Depth drop", o:"Pliométrie réactive : réduire le temps de contact au sol.", sets:4, reps:4, rest:90, sub:"chute depuis un step ~30 cm, puis saut"},
+            {n:"Bondissements latéraux", o:"Puissance latérale, transfert direct aux déplacements défensifs.", sets:4, reps:6, rest:75, unit:"/jambe"},
+            {n:"Gainage planche surélevée", o:"Gainage renforcé pour transférer la force jambes → l'air.", sets:3, hold:45, rest:45},
+          ]},
+      B:{ title:"Séance B", tag:"HAUT + CORE + UNILATÉRAL", type:"Haut + core + unilatéral", rest:60,
+          obj:"Continuer à équilibrer le corps avec des charges plus lourdes et plus d'unilatéral.",
+          ex:[
+            {n:"Développé couché", v:{gym:"Développé couché (barre)", home:"Pompes lestées (sac à dos)"}, o:"Force du haut du corps pour le contact et l'équilibre en l'air.", sets:4, reps:8, rest:60},
+            {n:"Tirage vertical lourd", v:{gym:"Tirage vertical (poulie/machine)", home:"Rowing haltère lourd"}, o:"Muscle le dos, équilibre les épaules, protège la posture.", sets:4, reps:8, rest:60},
+            {n:"Développé épaules assis", v:{gym:"Développé militaire assis (barre)", home:"Développé épaules (haltères)"}, o:"Épaules solides pour le tir et le contact en l'air.", sets:3, reps:8, rest:60},
+            {n:"Step-up sauté", v:{gym:"Step-up sauté lesté (haltères)", home:"Step-up sauté lesté (haltères)"}, o:"Puissance unilatérale de montée, proche du geste de saut.", sets:3, reps:8, rest:60, unit:"/jambe"},
+            {n:"Pallof press", o:"Gainage anti-rotation : stabilité du tronc en l'air.", sets:3, reps:10, rest:45, unit:"/côté"},
+            {n:"Pont fessier 1 jambe", o:"Ischios/fessiers en unilatéral, base de la puissance de hanche.", sets:3, reps:10, rest:45, unit:"/jambe"},
+            {n:"Chaise iso chargée", o:"Endurance de force sous charge, prépare les tendons à plus lourd.", sets:3, hold:45, rest:45},
+          ]},
+      C:{ title:"Séance C", tag:"EXPLOSIVITÉ + CORE", type:"Explosivité + core", rest:90,
+          obj:"Explosivité accrue : sauts plus intenses, changements de direction, gainage sous fatigue.",
+          ex:[
+            {n:"Squat sauté chargé léger", v:{gym:"Squat sauté avec barre légère", home:"Squat sauté avec haltères légers"}, o:"Convertit une charge légère en vitesse — pont entre force et puissance.", sets:4, reps:5, rest:90},
+            {n:"Broad jump enchaîné", o:"Puissance horizontale répétée avec réception stable entre chaque saut.", sets:4, reps:3, rest:90, sub:"2 sauts enchaînés par répétition"},
+            {n:"Skater jumps", o:"Puissance frontale/latérale, transfert aux changements de direction.", sets:4, reps:6, rest:75, unit:"/jambe"},
+            {n:"Fentes sautées alternées en continu", o:"Puissance unilatérale répétée, proche du rythme de course.", sets:3, reps:8, rest:75},
+            {n:"Box jump", o:"Puissance verticale maximale ; priorité à une réception silencieuse et contrôlée.", sets:4, reps:5, rest:90, sub:"redescends du box, ne saute pas en bas"},
+            {n:"Gainage dynamique", o:"Gainage et rythme sous fatigue, comme en fin de match.", sets:3, reps:20, rest:45, sub:"montées de genoux gainées"},
+          ]},
+    }
+  },
+  /* ===== MOIS 3 — TRANSFERT ===== */
+  { name:"Transfert",
+    sessions:{
+      A:{ title:"Séance A", tag:"BAS DU CORPS + PLYO", type:"Bas du corps + plyo", rest:75,
+          obj:"Transférer la puissance au geste de basket : unilatéral lourd et pliométrie réactive.",
+          ex:[
+            {n:"Squat bulgare lourd", v:{gym:"Squat bulgare lourd (barre)", home:"Pistol squat assisté (appui chaise)"}, o:"Force unilatérale maximale, transfert direct à l'impulsion sur un pied.", sets:3, reps:6, rest:75, unit:"/jambe"},
+            {n:"Fente marchée chargée", v:{gym:"Fente marchée (barre)", home:"Fente marchée (haltères)"}, o:"Force et équilibre en mouvement, proche des courses en match.", sets:3, reps:10, rest:60, unit:"/jambe"},
+            {n:"Soulevé de terre roumain unilatéral", v:{gym:"RDL unilatéral (barre/haltère)", home:"RDL unilatéral (haltère)"}, o:"Chaîne postérieure unilatérale — stabilité à la réception sur un pied.", sets:3, reps:8, rest:60, unit:"/jambe"},
+            {n:"Mollets unilatéraux", o:"Ressort de cheville sur un pied, essentiel à l'impulsion.", sets:3, reps:12, rest:45, unit:"/jambe"},
+            {n:"Depth jump réactif", o:"Force réactive maximale : le temps de contact le plus court possible.", sets:4, reps:4, rest:90, sub:"pense « sol brûlant »"},
+            {n:"Saut d'approche + réception 1 jambe", o:"Reproduit l'appel du rebond ou du tir en course.", sets:4, reps:4, rest:90, unit:"/jambe"},
+            {n:"Gainage planche jambe levée", o:"Gainage anti-extension sous instabilité.", sets:3, hold:40, rest:45},
+          ]},
+      B:{ title:"Séance B", tag:"HAUT + CORE + UNILATÉRAL", type:"Haut + core + unilatéral", rest:60,
+          obj:"Finir de solidifier le haut du corps et le tronc pour les contacts et le tir sous fatigue.",
+          ex:[
+            {n:"Tractions / rowing horizontal lourd", v:{gym:"Tractions (lestées si possible)", home:"Rowing horizontal élastique lourd"}, o:"Force de tirage maximale, dos solide pour les contacts.", sets:4, reps:6, rest:75},
+            {n:"Pompes plyométriques", o:"Puissance du haut du corps pour les appuis et contacts au sol.", sets:3, reps:6, rest:60, sub:"décolle les mains si possible"},
+            {n:"Développé épaules unilatéral", o:"Stabilité d'épaule asymétrique, comme au tir en suspension.", sets:3, reps:8, rest:60, unit:"/côté"},
+            {n:"Split jump", o:"Puissance unilatérale explosive avec changement de jambe en l'air.", sets:3, reps:6, rest:75, unit:"/jambe"},
+            {n:"Rotation médecine-ball", o:"Puissance rotationnelle du tronc, transfert au tir et à la passe.", sets:3, reps:8, rest:60, unit:"/côté"},
+            {n:"Gainage planche dynamique", o:"Gainage sous mouvement, stabilité du tronc en jeu.", sets:3, hold:40, rest:45},
+            {n:"Chaise iso 1 jambe", o:"Endurance de force unilatérale, prépare le tendon rotulien.", sets:3, hold:25, rest:45, unit:"/jambe"},
+          ]},
+      C:{ title:"Séance C", tag:"EXPLOSIVITÉ + CORE", type:"Explosivité + core", rest:90,
+          obj:"Exprimer un pic de puissance et d'explosivité — teste ce que tu as gagné en 3 mois.",
+          ex:[
+            {n:"Saut vertical maximal", o:"Exprime ta puissance maximale acquise sur 3 mois — vise ton meilleur saut à chaque série.", sets:5, reps:3, rest:120},
+            {n:"Multi-bonds", o:"Réactivité et puissance horizontale répétée.", sets:4, reps:5, rest:90, sub:"bondissements enchaînés"},
+            {n:"Sauts latéraux réactifs", o:"Puissance et réactivité dans le plan latéral, comme en défense.", sets:4, reps:6, rest:75, unit:"/côté"},
+            {n:"Bondissements verticaux enchaînés", o:"Puissance verticale répétée sous fatigue, comme en fin de match.", sets:4, reps:6, rest:90},
+            {n:"Fente sautée maximale", o:"Puissance unilatérale maximale, dernière conversion avant le terrain.", sets:3, reps:5, rest:90, unit:"/jambe"},
+            {n:"Gainage complet", o:"Gainage global pour finir le programme solide.", sets:3, hold:45, rest:45, sub:"planche + variantes"},
+          ]},
+    }
+  },
+];
 const ORDER = ["A","B","C"];
+
+/* ===== semaines / blocs ===== */
+function blockIdxForWeek(w){ return Math.min(BLOCKS.length-1, Math.floor((w-1)/4)); }
+function blockForWeek(w){ return BLOCKS[blockIdxForWeek(w)]; }
+function localWeek(w){ return ((w-1)%4)+1; }
+function sessOf(w, sKey){ return blockForWeek(w).sessions[sKey]; }
 
 /* ===== OPTIONS (matériel / lieu) → contexte d'exercice ===== */
 function ctx(){ const o=(S&&S.opts)||{}; return !o.kit ? "bw" : (o.gym ? "gym" : "home"); }
@@ -603,7 +652,7 @@ let S = load();
 function load(){ try{ return JSON.parse(localStorage.getItem(LS)) || null; }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
 function freshState(p){
-  return { profile:p, done:{}, completedSeq:[], history:[], sens:14, autoEnd:true, opts:{kit:false, gym:false},
+  return { profile:p, done:{}, completedSeq:[], history:[], opts:{kit:false, gym:false},
            playerId:"p_"+Math.random().toString(36).slice(2,9), jumps:[{cm:p.initialJump, at:Date.now()}] };
 }
 
@@ -621,8 +670,8 @@ function show(id){
 }
 function fmtDur(ms){ const s=Math.round(ms/1000); const m=Math.floor(s/60); return m+" min "+String(s%60).padStart(2,"0"); }
 function target(jump){ const min=Math.round(jump+8), max=Math.round(jump+15); return {min,max}; }
-function currentWeek(){ for(let w=1;w<=4;w++){ if(!ORDER.every(s=>S.done["w"+w+s])) return w; } return 4; }
-function isDeload(w){ return w===4; }
+function currentWeek(){ for(let w=1;w<=12;w++){ if(!ORDER.every(s=>S.done["w"+w+s])) return w; } return 12; }
+function isDeload(w){ return w%4===0; }
 function deloadSets(sets){ return Math.max(2, Math.round(sets*0.6)); }
 function estMin(sess){ let s=0; sess.ex.forEach(e=>{ s+=e.sets*((e.hold||25)+ (e.rest||sess.rest||60)); }); return Math.round(s/60); }
 
@@ -655,37 +704,6 @@ function beep(freq, dur, vol){ if(!AC) return; try{
   g.gain.exponentialRampToValueAtTime(0.0001, t+(dur||0.15)); o.stop(t+(dur||0.15)+0.02);
 }catch(e){} }
 function vibe(ms){ if(navigator.vibrate) try{navigator.vibrate(ms);}catch(e){} }
-
-/* ============ VOICE ============ */
-let voice={active:false, stream:null, raf:null, ctx:null};
-async function voiceStart(onRep, onLevel){
-  try{ voice.stream = await navigator.mediaDevices.getUserMedia({audio:true}); }catch(e){ return false; }
-  voice.ctx = new (window.AudioContext||window.webkitAudioContext)();
-  if(voice.ctx.state==="suspended"){ try{ await voice.ctx.resume(); }catch(e){} }
-  const src=voice.ctx.createMediaStreamSource(voice.stream);
-  const an=voice.ctx.createAnalyser(); an.fftSize=512; src.connect(an);
-  const buf=new Uint8Array(an.fftSize);
-  let armed=true, last=0, calib=true, calibStart=performance.now(), floorMax=0, floor=0.012;
-  voice.active=true;
-  (function loop(){
-    an.getByteTimeDomainData(buf);
-    let sum=0; for(let i=0;i<buf.length;i++){ const v=(buf[i]-128)/128; sum+=v*v; }
-    const rms=Math.sqrt(sum/buf.length); const now=performance.now();
-    if(calib){ floorMax=Math.max(floorMax,rms); if(now-calibStart>900){ floor=Math.max(0.012, floorMax*1.6); calib=false; } }
-    const thr = floor*1.5 + (0.5/(S.sens||14));
-    onLevel(Math.min(1, rms/(thr*1.3)));
-    if(!calib){ if(rms>thr && armed && now-last>300){ armed=false; last=now; onRep(); } if(rms<thr*0.6){ armed=true; } }
-    voice.raf=requestAnimationFrame(loop);
-  })();
-  return true;
-}
-function voiceStop(){
-  voice.active=false;
-  if(voice.raf) cancelAnimationFrame(voice.raf);
-  if(voice.stream) voice.stream.getTracks().forEach(t=>t.stop());
-  if(voice.ctx) try{voice.ctx.close();}catch(e){}
-  voice={active:false, stream:null, raf:null, ctx:null};
-}
 
 /* ============ SYNC (Firebase Realtime Database — REST, même base que le shotlist) ============ */
 const FB_BASE = "https://shotlist-298e2-default-rtdb.europe-west1.firebasedatabase.app";
@@ -735,7 +753,8 @@ let RUN=null; let nextTimer=null;
 function clearNext(){ if(nextTimer){ clearTimeout(nextTimer); nextTimer=null; } }
 
 /* ===== PLANNING PAR DATES ===== */
-const SEQ=[]; [1,2,3,4].forEach(w=>["A","B","C"].forEach(s=>SEQ.push({w,s})));
+const SEQ=[]; for(let w=1; w<=BLOCKS.length*4; w++){ ["A","B","C"].forEach(s=>SEQ.push({w,s})); }
+const TOTAL = SEQ.length;
 const DAY=86400000;
 const DOW=["dim","lun","mar","mer","jeu","ven","sam"];
 function startOfDay(ts){ const d=new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
@@ -744,15 +763,15 @@ function progressCount(){ return (S.completedSeq||[]).length; }
 function lastDoneTs(){ const c=S.completedSeq||[]; return c.length? c[c.length-1].at : null; }
 function nextActiveTs(){ const l=lastDoneTs(); return l==null ? todayTs() : startOfDay(l)+2*DAY; }
 function baseNextTs(){ return Math.max(nextActiveTs(), todayTs()); }
-function nextIsActive(){ return progressCount()<12; }
+function nextIsActive(){ return progressCount()<TOTAL; }
 function seqDateTs(i){ const c=S.completedSeq||[]; if(i<c.length) return startOfDay(c[i].at); return todayTs()+(i-c.length)*2*DAY; }
-function scheduleMap(){ const map={}; const prog=progressCount(); for(let i=0;i<12;i++){ const ts=seqDateTs(i); const st = i<prog?'done':(i===prog?(nextIsActive()?'active':'planned'):'planned'); map[ts]={st,i,w:SEQ[i].w,s:SEQ[i].s}; } return map; }
+function scheduleMap(){ const map={}; const prog=progressCount(); for(let i=0;i<TOTAL;i++){ const ts=seqDateTs(i); const st = i<prog?'done':(i===prog?(nextIsActive()?'active':'planned'):'planned'); map[ts]={st,i,w:SEQ[i].w,s:SEQ[i].s}; } return map; }
 function fmtDateShort(ts){ return new Date(ts).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}); }
 
 function renderHome(){
   const p=S.profile;
   $("#home-hi").textContent = "Salut "+p.name.split(" ")[0];
-  const prog=progressCount(), total=12, pct=Math.round(prog/total*100);
+  const prog=progressCount(), total=TOTAL, pct=Math.round(prog/total*100);
   $("#h-progtxt").textContent = prog+"/"+total;
   $("#h-progpct").textContent = pct+"%";
   $("#h-progbar").style.width = pct+"%";
@@ -776,22 +795,22 @@ function renderDateStrip(){
 
 function renderHero(){
   const prog=progressCount(), card=$("#hero-card"), play=$("#hero-play");
-  if(prog>=12){
+  if(prog>=TOTAL){
     card.classList.add("rest"); play.classList.add("off"); play.onclick=null;
     $("#hero-tagpill").textContent="Terminé";
-    $("#hero-sub").textContent="Mois 1 · Fondations";
+    $("#hero-sub").textContent="3 mois · Transfert";
     $("#hero-title").textContent="Programme terminé 🎉";
-    $("#hero-tag").textContent="Bravo"; $("#hero-count").textContent="12/12 séances";
+    $("#hero-tag").textContent="Bravo"; $("#hero-count").textContent=TOTAL+"/"+TOTAL+" séances";
     return;
   }
-  const it=SEQ[prog], ns=BLOCK.sessions[it.s];
+  const it=SEQ[prog], ns=sessOf(it.w, it.s);
   $("#hero-title").textContent=ns.title;
   $("#hero-tag").textContent=ns.tag.charAt(0)+ns.tag.slice(1).toLowerCase();
   $("#hero-count").textContent=ns.ex.length+" exercices";
   if(nextIsActive()){
     card.classList.remove("rest"); play.classList.remove("off");
     $("#hero-tagpill").textContent="Aujourd'hui";
-    $("#hero-sub").textContent="Fondations · Semaine "+it.w;
+    $("#hero-sub").textContent=blockForWeek(it.w).name+" · Semaine "+localWeek(it.w);
     play.onclick=()=> startActive();
   } else {
     card.classList.add("rest"); play.classList.add("off"); play.onclick=null;
@@ -807,12 +826,12 @@ function renderProgramList(){
   if(homeExpanded){ idxs = SEQ.map((_,i)=>i); }
   else { const start=Math.min(prog, Math.max(0,total-4)); idxs=[]; for(let i=start;i<Math.min(start+4,total);i++) idxs.push(i); }
   const rows = idxs.map(i=>{
-    const it=SEQ[i], sess=BLOCK.sessions[it.s], done=i<prog, active=(i===prog);
+    const it=SEQ[i], sess=sessOf(it.w, it.s), done=i<prog, active=(i===prog);
     let status, badge, go;
     if(done){ status="Fait le "+fmtDateShort(S.completedSeq[i].at); badge="✓"; go="↻"; }
     else if(active){ status="À faire — quand tu veux"; badge=it.s; go="›"; }
     else { status="À suivre · ~"+fmtDateShort(seqDateTs(i)); badge=it.s; go="›"; }
-    return `<div class="stile ${done?'done':''} ${active?'next':''}" data-i="${i}"><div class="thumb badge">${badge}</div><div class="m"><div class="nm">${sess.title} · Sem${it.w}</div><div class="ds">${sess.type} · ${sess.ex.length} exo</div><div class="ds2">${status}</div></div><div class="go">${go}</div></div>`;
+    return `<div class="stile ${done?'done':''} ${active?'next':''}" data-i="${i}"><div class="thumb badge">${badge}</div><div class="m"><div class="nm">${sess.title} · ${blockForWeek(it.w).name} S${localWeek(it.w)}</div><div class="ds">${sess.type} · ${sess.ex.length} exo</div><div class="ds2">${status}</div></div><div class="go">${go}</div></div>`;
   }).join("");
   $("#session-list").innerHTML = rows + `<button class="btn ghost" id="voir-plus" style="margin-top:2px">${homeExpanded?"Voir moins":"Voir tout le programme ("+total+")"}</button>`;
   $$("#session-list .stile").forEach(el=>{ el.onclick=()=>{ const i=+el.dataset.i, prog2=progressCount(); const it=SEQ[i]; if(i<prog2){ openSession(it.s,it.w,{replay:true, canStart:true}); } else if(i===prog2){ startActive(); } else { openSession(it.s,it.w,{canStart:false, dateTs:seqDateTs(i)}); } }; });
@@ -825,7 +844,7 @@ function onDayTap(ts){
   const info=scheduleMap()[ts]; if(!info) return;
   if(info.st==='done') openSession(info.s, info.w, {replay:true, canStart:true});
   else if(info.st==='active') openSession(info.s, info.w, {canStart:true});
-  else { const ns=BLOCK.sessions[info.s]; toast(`<span class="k">${fmtDateShort(ts)}</span>${ns.type} · ${ns.ex.length} exo prévus`, 2600); }
+  else { const ns=sessOf(info.w, info.s); toast(`<span class="k">${fmtDateShort(ts)}</span>${ns.type} · ${ns.ex.length} exo prévus`, 2600); }
 }
 
 function onCalTap(ts){
@@ -860,9 +879,9 @@ function renderCalendar(){
 
 function openSession(sKey, week, opts){
   opts=opts||{};
-  const sess=BLOCK.sessions[sKey];
+  const sess=sessOf(week, sKey);
   RUN={ sKey, week, sess, exIdx:0, setIdx:0, count:0, reps:{}, startedAt:null, replay:!!opts.replay, origin:(opts.origin||"s-home"), exLog:[], exStartTs:null };
-  $("#sess-crumb").textContent = BLOCK.name+" · Sem"+week;
+  $("#sess-crumb").textContent = blockForWeek(week).name+" · Sem"+localWeek(week);
   $("#sess-kicker").textContent = sess.tag;
   $("#sess-title").textContent = sess.title;
   $("#sess-dur").textContent = "~"+estMin(sess)+" min";
@@ -902,14 +921,13 @@ function startSession(){
   RUN.startedAt=Date.now(); RUN.exIdx=0; RUN.setIdx=0;
   loadExercise();
   show("s-exercise");
-  startVoiceAuto();
 }
 
 function curEx(){ const e=RUN.sess.ex[RUN.exIdx]; const sets=isDeload(RUN.week)?deloadSets(e.sets):e.sets; return {e, sets}; }
 
 function loadExercise(){
   const {e, sets}=curEx();
-  RUN.setIdx=0; RUN.count=0; RUN.side=0; RUN._ending=false;
+  RUN.setIdx=0; RUN.count=0; RUN.side=0;
   RUN.exStartTs=Date.now();
   const _t=$("#toast"); if(_t) _t.classList.remove("show");
   const N=RUN.sess.ex.length;
@@ -924,14 +942,12 @@ function loadExercise(){
   const isHold=!!e.hold;
   $("#ex-counter").style.display = isHold?"none":"flex";
   $("#ex-hold").style.display = isHold?"flex":"none";
-  $("#ex-setdone").style.display = isHold?"none":"flex";
   if(isHold){
     updateHoldLabel();
     $("#ex-hold-num").textContent = e.hold;
     $("#ex-hold-start").disabled=false;
   } else {
-    setCount(0); updateRepLabel();
-    const hint=$("#ex-voicehint"); if(hint && voice.active) hint.innerHTML="🎤 Comptez à voix haute";
+    renderRepTarget(); updateRepLabel();
   }
 }
 
@@ -939,29 +955,25 @@ function renderSetTrack(sets){
   const c=$("#ex-settrack"); c.innerHTML="";
   for(let i=0;i<sets;i++){ const d=document.createElement("div"); d.className="dotset"+(i<RUN.setIdx?' done':(i===RUN.setIdx?' cur':'')); c.appendChild(d); }
 }
-function setCount(n){ RUN.count=n; const {e}=curEx(); $("#ex-count").innerHTML = n+'<span class="sl">/</span>'+e.reps; }
-let voiceMuteUntil=0;
-function muteVoice(ms){ voiceMuteUntil=performance.now()+(ms||800); }
-function toast(text, ms){ const t=$("#toast"), b=$("#toast-box"); if(!t||!b) return; ms=ms||3000; b.innerHTML=text; t.classList.add("show"); muteVoice(ms); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"), ms); }
+function renderRepTarget(){ const {e}=curEx(); const el=$("#ex-count"); if(el) el.textContent = e.reps; }
+function toast(text, ms){ const t=$("#toast"), b=$("#toast-box"); if(!t||!b) return; ms=ms||3000; b.innerHTML=text; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"), ms); }
 function sideWord(unit){ return (unit && unit.indexOf("côté")>=0) ? "côté" : "jambe"; }
 function sideToast(unit){ return `<span class="k">On change</span>L'autre ${sideWord(unit)}`; }
 function sideName(unit, side){ const w = (unit && unit.indexOf("côté")>=0) ? "côté" : "jambe"; return w+" "+((side||0)===0?"gauche":"droite"); }
 function updateRepLabel(){ const {e}=curEx(); const el=$("#ex-repunit"); if(el) el.textContent = "reps"+(e.unit?(" · "+sideName(e.unit, RUN.side)):""); }
 function updateHoldLabel(){ const {e}=curEx(); const el=$("#ex-hold-target"); if(el) el.textContent = `Maintiens ${e.hold} s`+(e.unit?(" · "+sideName(e.unit, RUN.side)):""); }
 
-function addRep(){
-  if(RESTING || (RUN && RUN._ending) || performance.now()<voiceMuteUntil) return;
+function markDone(){
+  if(RESTING) return;
   const {e}=curEx(); if(e.hold) return;
-  setCount(RUN.count+1); vibe(15);
-  if(RUN.count>=e.reps){ beep(660,0.12,0.14);
-    if(S.autoEnd!==false){ RUN._ending=true; setTimeout(()=>{ RUN._ending=false; validateRepSide(); }, 400); }
-  }
+  RUN.count=e.reps; vibe(15); beep(660,0.12,0.14);
+  validateRepSide();
 }
 
 function validateRepSide(){
   const {e}=curEx();
   RUN.reps[RUN.exIdx]=(RUN.reps[RUN.exIdx]||0)+RUN.count;
-  if(e.unit && (RUN.side||0)===0){ RUN.side=1; setCount(0); updateRepLabel(); beep(880,0.1,0.16); vibe([30,40,30]); toast(sideToast(e.unit),3000); return; }
+  if(e.unit && (RUN.side||0)===0){ RUN.side=1; RUN.count=0; renderRepTarget(); updateRepLabel(); beep(880,0.1,0.16); vibe([30,40,30]); toast(sideToast(e.unit),3000); return; }
   finishSet();
 }
 function validateHoldSide(){
@@ -975,7 +987,7 @@ function finishSet(){
   if(RUN.setIdx>=sets){ endExercise(true, false); return; }
   renderSetTrack(sets);
   const rest=e.rest||RUN.sess.rest||60;
-  startRest(rest, `Série ${RUN.setIdx+1}/${sets}`, ()=>{ RUN.count=0; if(!e.hold){ setCount(0); updateRepLabel(); } else { $("#ex-hold-num").textContent=e.hold; $("#ex-hold-start").disabled=false; updateHoldLabel(); } });
+  startRest(rest, `Série ${RUN.setIdx+1}/${sets}`, ()=>{ RUN.count=0; if(!e.hold){ renderRepTarget(); updateRepLabel(); } else { $("#ex-hold-num").textContent=e.hold; $("#ex-hold-start").disabled=false; updateHoldLabel(); } });
 }
 
 function logExercise(skipped){
@@ -1046,12 +1058,11 @@ function endRest(){
   clearInterval(restTick);
   const rest=$("#rest");
   rest.classList.add("go"); $("#rest-lbl").textContent="C'EST PARTI"; $("#rest-num").textContent="GO";
-  muteVoice(900); beep(1150,0.3,0.2); vibe([60,40,120]);
+  beep(1150,0.3,0.2); vibe([60,40,120]);
   setTimeout(()=>{ rest.classList.remove("show"); RESTING=false; if(restDone) restDone(); }, 700);
 }
 
 function finishSession(){
-  stopVoiceAll();
   releaseWakeLock();
   const dur=Date.now()-RUN.startedAt;
   const totalReps=Object.values(RUN.reps).reduce((a,b)=>a+b,0);
@@ -1089,7 +1100,7 @@ function renderProgress(){
   const h=S.history;
   $("#p-history").innerHTML = h.length? h.map(r=>{
     const d=new Date(r.at); const dd=d.toLocaleDateString('fr-FR')+" "+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    return `<div class="exrow"><div class="rthumb badge" style="font-weight:800">${r.session}</div><div class="nm">${BLOCK.sessions[r.session].title} · S${r.week}<em>${dd}</em></div><div class="dose">${fmtDur(r.durationMs)}</div></div>`;
+    return `<div class="exrow"><div class="rthumb badge" style="font-weight:800">${r.session}</div><div class="nm">${sessOf(r.week, r.session).title} · ${blockForWeek(r.week).name} S${localWeek(r.week)}<em>${dd}</em></div><div class="dose">${fmtDur(r.durationMs)}</div></div>`;
   }).join("") : '<p class="tiny muted" style="margin:0">Aucune séance terminée pour l\'instant.</p>';
 }
 
@@ -1111,29 +1122,12 @@ $("#btn-start-session").onclick=startSession;
 $("#opt-kit").onclick=(e)=>{ if(!e.target.dataset.v) return; if(!S.opts)S.opts={kit:false,gym:false}; S.opts.kit=(e.target.dataset.v==="avec"); if(S.profile)save(); syncOptButtons(); renderSessExlist(); };
 $("#opt-lieu").onclick=(e)=>{ if(!e.target.dataset.v) return; if(!S.opts)S.opts={kit:false,gym:false}; if(!S.opts.kit) return; S.opts.gym=(e.target.dataset.v==="salle"); if(S.profile)save(); syncOptButtons(); renderSessExlist(); };
 
-$("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ clearNext(); stopVoiceAll(); releaseWakeLock(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
+$("#ex-back").onclick=()=>{ if(confirm("Quitter la séance en cours ?")){ clearNext(); releaseWakeLock(); clearInterval(holdTick); openSession(RUN.sKey,RUN.week); } };
 $("#ex-skip").onclick=()=>{ clearInterval(holdTick); endExercise(false, true); };
 $("#ex-prev").onclick=prevExercise;
-$("#ex-setdone").onclick=validateRepSide;
+$("#ex-fait").onclick=markDone;
 $("#ex-why").onclick=()=>{ const o=$("#ex-obj"); if(o) o.style.display = (o.style.display==="none"?"block":"none"); };
-$("#ex-setgear").onclick=()=>{ const q=$("#ex-micquick"); const open=q.style.display==="none"; q.style.display=open?"block":"none"; if(open) $("#ex-sens").value=(S&&S.sens)||14; };
-$("#ex-sens").oninput=()=>{ if(S){ S.sens=+$("#ex-sens").value; if(S.profile) save(); } };
 $("#ex-hold-start").onclick=()=>{ unlockAudio(); startHold(); };
-
-let voiceMax=0, voiceWatch=null;
-function startVoiceAuto(){
-  const hint=$("#ex-voicehint"); voiceMax=0;
-  if(hint) hint.innerHTML="🎤 Calibrage du micro…";
-  voiceStart(()=>{ addRep(); }, (lvl)=>{ voiceMax=Math.max(voiceMax,lvl); const pct=Math.round(lvl*100); $("#ex-level").style.width=pct+"%"; const t=$("#ex-lvltxt"); if(t) t.textContent=pct+"%"; })
-    .then(ok=>{
-      if(ok){
-        setTimeout(()=>{ if(voice.active && $("#ex-voicehint")) $("#ex-voicehint").innerHTML="🎤 Comptez à voix haute"; }, 1000);
-        clearTimeout(voiceWatch);
-        voiceWatch=setTimeout(()=>{ if(voice.active && voiceMax<0.05 && $("#ex-voicehint")){ $("#ex-voicehint").innerHTML="🎤 Aucun son — parlez plus fort, ou validez ✓"; } }, 4500);
-      } else { if($("#ex-voicehint")) $("#ex-voicehint").innerHTML="⚠️ Micro refusé — validez la série avec ✓"; }
-    });
-}
-function stopVoiceAll(){ clearTimeout(voiceWatch); voiceStop(); const t=$("#ex-lvltxt"); if(t) t.textContent="0%"; const l=$("#ex-level"); if(l) l.style.width="0%"; }
 
 $("#rest-minus").onclick=()=>{ restLeft=Math.max(1,restLeft-15); $("#rest-num").textContent=restLeft; };
 $("#rest-skip").onclick=endRest;
@@ -1147,8 +1141,6 @@ $("#p-save").onclick=()=>{
 };
 
 function openSettings(){
-  $("#set-sens").value=S.sens||14;
-  $$("#set-autoend button").forEach(b=>b.classList.toggle("on", b.dataset.v===((S.autoEnd!==false)?"on":"off")));
   const p=S.profile;
   $("#set-profile").textContent = `${p.name} · ${p.height||'–'} cm · ${p.weight||'–'} kg · détente départ ${p.initialJump} cm · niveau ${p.level}`;
   const n=loadOutbox().length;
@@ -1167,8 +1159,6 @@ $("#set-checksync").onclick=async ()=>{
     el.textContent = (n>0 ? `✓ ${n} exercice(s) reçus par le coach.` : "Base vide pour l'instant — aucun exercice reçu.") + (pend ? ` (${pend} encore en attente sur ce téléphone)` : "");
   }catch(e){ el.textContent = "Échec de la connexion à Firebase : "+e.message; }
 };
-$("#set-sens").oninput=()=>{ if(S){ S.sens=+$("#set-sens").value; if(S.profile) save(); } };
-$("#set-autoend").onclick=e=>{ if(e.target.dataset.v){ if(!S)S={}; S.autoEnd=(e.target.dataset.v==="on"); $$("#set-autoend button").forEach(b=>b.classList.remove("on")); e.target.classList.add("on"); if(S.profile) save(); } };
 $("#set-reset").onclick=()=>{ if(confirm("Effacer ton profil et tout ton historique ?")){ localStorage.removeItem(LS); S=null; location.reload(); } };
 
 /* bottom nav */
@@ -1182,7 +1172,7 @@ $("#cal-next").onclick=()=>{ if(!calRef) return; calRef.m++; if(calRef.m>11){cal
 
 /* ============ BOOT ============ */
 if(S && S.profile){
-  if(!S.completedSeq){ S.completedSeq = (S.history||[]).slice().reverse().map(h=>({w:h.week, s:h.session, at:h.at})).slice(0,12); save(); }
+  if(!S.completedSeq){ S.completedSeq = (S.history||[]).slice().reverse().map(h=>({w:h.week, s:h.session, at:h.at})).slice(0,TOTAL); save(); }
   if(!S.opts){ S.opts={kit:false, gym:false}; save(); }
   renderHome(); show("s-home");
 } else { show("s-onboard"); }

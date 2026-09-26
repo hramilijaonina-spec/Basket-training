@@ -1,7 +1,7 @@
 {
   "name": "Détente — Programme Basket",
   "short_name": "Détente",
-  "description": "Programme de détente et d'explosivité — Mois 1 (Fondations).",
+  "description": "Programme de détente et d'explosivité — 3 mois (Fondations → Puissance → Transfert).",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
