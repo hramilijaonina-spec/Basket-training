@@ -1,5 +1,5 @@
 /* Détente PWA — service worker (network-first, HTML jamais mis en cache HTTP) */
-const CACHE = "detente-m1-2.6";
+const CACHE = "detente-m1-2.7";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./hero.jpg",
   "./ex-squat.jpg", "./ex-fente.jpg", "./ex-souleve.jpg", "./ex-mollets.jpg",
@@ -30,6 +30,8 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
+  // vidéos : laissées au navigateur (requêtes par morceaux sur iOS) — hors ligne, l'app retombe sur la photo
+  if (/\.(mp4|webm)$/i.test(url.pathname)) return;
 
   const isHTML = req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html");
   // HTML : on force le réseau SANS cache HTTP (sinon iOS ressert une vieille page)

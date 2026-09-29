@@ -140,7 +140,7 @@
   .exprog .seg1{flex:1; height:5px; border-radius:3px; background:var(--surface-2);}
   .exprog .seg1.on{background:var(--accent);}
   .exmedia{aspect-ratio:16/9; margin:2px 16px 0; border-radius:20px; overflow:hidden; background:var(--surface); display:flex; align-items:center; justify-content:center;}
-  .exmedia img{width:100%; height:100%; object-fit:cover;}
+  .exmedia img, .exmedia video{width:100%; height:100%; object-fit:cover; display:block;}
   .exmedia .exfigwrap{width:66%; height:66%; display:flex; align-items:center; justify-content:center;}
   .exph{width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--ink-faint);}
   .exph svg{width:40px; height:40px; opacity:.7;}
@@ -416,7 +416,7 @@
     <div class="card">
       <h3>Profil</h3>
       <p class="tiny muted" id="set-profile"></p>
-      <p class="tiny" style="color:var(--accent)">App 2.6 · si tu ne vois pas « 2.6 », tu es sur une version en cache.</p>
+      <p class="tiny" style="color:var(--accent)">App 2.7 · si tu ne vois pas « 2.7 », tu es sur une version en cache.</p>
       <button class="btn ghost" id="set-reset" style="color:var(--hot)">Réinitialiser le profil</button>
     </div>
   </section>
@@ -640,10 +640,29 @@ function figSVG(p){
 const FIGSTYLE = "<style>.exfig .lb{fill:none;stroke:var(--ink);stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}.exfig .gr{stroke:var(--ink-faint);stroke-width:3;stroke-linecap:round}.exfig .hd{fill:var(--accent)}.exfig .ar{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}</style>";
 function artFor(name){ const s=figSVG(ART[name]); return s? FIGSTYLE+s : ""; }
 function thumbFor(name){ const s=figSVG(ART[name]); return s? FIGSTYLE+s : ""; }
-function setMedia(src){
+/* média d'exercice : vidéo .mp4 → sinon photo .jpg → sinon hero.jpg */
+function exVid(e){ const p=PHOTO[e.n]; return p ? p.replace(/\.jpg$/i, ".mp4") : null; }
+let _mediaTok=0;
+function setMedia(e){
   const media=document.getElementById("ex-media");
-  media.innerHTML = `<img alt="" onerror="this.onerror=null;this.src='hero.jpg'">`;
-  media.firstChild.src = src || "hero.jpg";
+  const tok=++_mediaTok;
+  const imgSrc=exImg(e), vidSrc=exVid(e);
+  const showImg=()=>{
+    if(tok!==_mediaTok) return;               // l'exercice a changé entre-temps
+    media.innerHTML=`<img alt="">`;
+    const im=media.firstChild;
+    im.onerror=()=>{ im.onerror=null; im.src="hero.jpg"; };
+    im.src=imgSrc || "hero.jpg";
+  };
+  if(!vidSrc){ showImg(); return; }
+  media.innerHTML="";
+  const v=document.createElement("video");
+  v.muted=true; v.loop=true; v.autoplay=true; v.playsInline=true; v.preload="auto";
+  v.setAttribute("muted",""); v.setAttribute("playsinline",""); v.setAttribute("webkit-playsinline","");
+  v.addEventListener("error", showImg, {once:true});
+  v.src=vidSrc;
+  media.appendChild(v);
+  const p=v.play(); if(p && p.catch) p.catch(()=>{});
 }
 
 /* ============ STATE ============ */
@@ -934,7 +953,7 @@ function loadExercise(){
   $("#ex-progress").innerHTML = Array.from({length:N},(_,i)=>`<div class="seg1 ${i<=RUN.exIdx?'on':''}"></div>`).join("");
   $("#ex-step").textContent = `Exercice ${RUN.exIdx+1}/${N}`;
   $("#ex-name").textContent = exName(e);
-  setMedia(exImg(e));
+  setMedia(e);
   $("#ex-obj").innerHTML = "<b>Pourquoi :</b> "+e.o;
   $("#ex-obj").style.display="none";
   $("#ex-prev").disabled = RUN.exIdx===0;
